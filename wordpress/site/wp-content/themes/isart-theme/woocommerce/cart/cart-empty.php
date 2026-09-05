@@ -1,0 +1,32 @@
+<?php
+
+/**
+ * Empty cart page
+ *
+ * This template can be overridden by copying it to yourtheme/woocommerce/cart/cart-empty.php.
+ *
+ * HOWEVER, on occasion WooCommerce will need to update template files and you
+ * (the theme developer) will need to copy the new files to your theme to
+ * maintain compatibility. We try to do this as little as possible, but it does
+ * happen. When this occurs the version of the template file will be bumped and
+ * the readme will list any important changes.
+ *
+ * @see     https://woocommerce.com/document/template-structure/
+ * @package WooCommerce\Templates
+ * @version 7.0.1
+ */
+
+defined('ABSPATH') || exit;
+
+/*
+ * @hooked wc_empty_cart_message - 10
+ */
+do_action( 'woocommerce_cart_is_empty' );
+?>
+<div class="empty-cart d-flex flex-column align-items-center">
+	<div class="empty-cart-title">В корзине пусто</div>
+	<div class="empty-cart-text">Перейдите в каталог, чтобы выбрать товары, или используйте поиск, чтобы найти необходимое.</div>
+	<a class="btn btn_buy btn_back-shop d-flex align-items-center justify-content-center button wc-backward<?php echo esc_attr(wc_wp_theme_get_element_class_name('button') ? ' ' . wc_wp_theme_get_element_class_name('button') : ''); ?>" href="<?php echo get_site_url();?>">
+		На главную
+	</a>
+</div>

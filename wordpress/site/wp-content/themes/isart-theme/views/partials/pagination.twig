@@ -1,0 +1,25 @@
+{% if posts.pagination.pages is not empty %}
+<div class="pagintation_block">
+    <nav class="navigation pagination" role="navigation">
+        <div class="nav-links d-flex justify-content-center w-100">
+            {% if posts.pagination.prev %}
+                <a href="{{posts.pagination.prev.link}}" class="prev-page d-flex justify-content-center align-items-center position-relative text-decoration-none">
+					<img src="{{ site.theme.link }}/assets/images/prev.svg" alt="">
+				</a>
+            {% endif %}
+            {% for page in posts.pagination.pages %}
+                {% if page.link %}
+                    <a class="page-numbers d-flex align-items-center justify-content-center text-decoration-none" href="{{ page.link }}"><span>{{ page.title }}</span></a>
+                {% else %}
+                    <span aria-current="page" class="page-numbers d-flex align-items-center justify-content-center {% if page.class != 'dots' %}current{% endif %}"><span>{{ page.title }}</span></span>
+                {% endif %}
+            {% endfor %}
+            {% if posts.pagination.next %}
+                <a href="{{posts.pagination.next.link}}" class="next-page d-flex justify-content-center align-items-center position-relative text-decoration-none">
+					<img src="{{ site.theme.link }}/assets/images/next.svg" alt="">
+                </a>
+            {% endif %}
+        </div>
+    </nav>
+</div>
+{% endif %}

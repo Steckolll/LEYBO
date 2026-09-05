@@ -1,0 +1,34 @@
+{% include "partials/header.twig" %}
+<main class='main-content post_page pt-prime pb-prime' id="app">
+	<div class="container">
+		<div class="breadcrumbs_block">
+			{{ breadcrumbs }}
+		</div>
+		<h1 class="h1 page_title m-0 text-center">{{ post.title }}</h1>
+		<div class="post_content text-center">
+			{% if post.meta('статья') %}
+				{% for item in post.meta('статья') %}
+					{% if item.контент %}
+						{{ item.контент }}
+					{% endif %}
+					{% if item.товары %}
+						<div class="look-row w-100">
+							<div class="look-content">
+								<div class="swiper lookSwiper">
+									<div class="swiper-wrapper">
+										{% for product in item.товары %}
+											<div class="swiper-slide">
+												{{ fn('product_render', product) }}
+											</div>
+										{% endfor %}
+									</div>
+								</div>
+							</div>
+						</div>
+					{% endif %}
+				{% endfor %}
+			{% endif %}
+		</div>
+	</div>
+</main>
+{% include "partials/footer.twig" %}

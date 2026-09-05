@@ -1,0 +1,86 @@
+{% include "partials/header.twig" %}
+
+<main class='main-content pt-prime pb-prime' id="app">
+	<div class="container">
+		<div class="breadcrumbs_block">
+			<div id="breadcrumbs" class="breadcrumbs">
+				<span>
+					<span>
+						<a href="{{ site.link }}">Главная</a>
+					</span>
+					/
+					<span>
+						{% if post_type == "women" %}
+							<a href="{{ site.link }}/women/">Женщинам</a>
+						{% else %}
+							<a href="{{ site.link }}/men/">Мужчинам</a>
+						{% endif %}
+					</span>
+					/
+					<span class="breadcrumb_last" aria-current="page">Готовые образы</span>
+				</span>
+			</div>
+		</div>
+		<h1 class="h1 page_title m-0">Готовые
+			<span style="text-transform: lowercase">{{ title }}</span>
+			образы</h1>
+		<div class="looks_list d-flex flex-column gap-4 ajax_pagination">
+			{% for look in posts %}
+				<div class="look-row w-100 ajax_item">
+					<div class="look-head d-flex align-items-center justify-content-between">
+						<h2 class="h2 look-head-name m-0">{{ look.title }}</h2>
+					</div>
+					<div class="look-content">
+						<div class="swiper lookSwiper">
+							<div class="swiper-wrapper">
+								{% for post in Post(look.товары) %}
+									<div
+										class="swiper-slide">
+										{# <a href="{{ post.link }}" class="product-card">
+										
+																						<div class="product-image position-relative">
+																							{% if post.thumbnail %}
+																								<img class="w-100 h-100 object-cover-50" src="{{ post.thumbnail.src }}" alt="">
+																							{% else %}
+																								<img class="w-100 h-100 object-cover-50" src="{{ site.link }}/wp-content/uploads/woocommerce-placeholder.png" alt="">
+																							{% endif %}
+																							<div class="product-card-bottom position-absolute">
+																								<div class="tags_list d-flex">
+																									<div class="prod_tag">New</div>
+																									<div class="prod_tag">Hit</div>
+																								</div>
+																								<object>
+																									<a href="?add-to-cart='{{ post.id }}'" data-quantity="1" data-product_id="{{ post.id }}" class="btn btn_buy button add_to_cart_button ajax_add_to_cart d-flex align-items-center justify-content-center w-100">Добавить в корзину</a>
+																								</object>
+																							</div>
+																						</div>
+																						<div class="product-info">
+																							<div class="product-prices text-center">
+																								<div class="current-price nunito">
+																									{% if post._price is iterable %}
+																										от
+																										{{ post._price[0]|number_format(0, '.', ' ') }}
+																										₽
+																									{% else %}
+																										{{ post._price|number_format(0, '.', ' ') }}
+																										₽
+																									{% endif %}
+																								</div>
+																							</div>
+																							<h2 class="product-card-name text-center m-0">{{ post.title }}</h2>
+																						</div>
+																					</a> #}
+										{{ fn('product_render', post) }}
+									</div>
+								{% endfor %}
+							</div>
+						</div>
+					</div>
+				</div>
+			{% endfor %}
+		</div>
+		{% include "partials/pagination.twig"  with { pagination: posts.pagination({show_all: false, mid_size: 1, end_size: 2}) } %}
+	</div>
+</main>
+{% include "partials/footer.twig" %}
+11

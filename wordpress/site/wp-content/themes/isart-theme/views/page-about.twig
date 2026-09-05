@@ -1,0 +1,22 @@
+{% include "partials/header.twig" %}
+<main class='main-content about_page' id="app">
+	<div class="about_banner pt-prime" style="background-image: url({{ post.meta('баннер') }})">
+		<div class="container">
+			<div class="breadcrumbs_block">
+				{{ breadcrumbs }}
+			</div>
+			<div class="about_content d-flex align-items-start">
+				<h1 class="h1 about_title m-0">{{ post.title }}</h1>
+				<div class="about_content-info">
+					{% if post.meta('подзаголовок') %}
+						<h2 class="h2 about_content-title m-0">{{ post.meta('подзаголовок') }}</h2>
+					{% endif %}
+					<div class="about_content-text">
+						{{ post.content }}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</main>
+{% include "partials/footer.twig" %}

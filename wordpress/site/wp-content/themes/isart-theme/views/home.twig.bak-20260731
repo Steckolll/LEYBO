@@ -1,0 +1,27 @@
+{% include "partials/header.twig" %}
+
+<main class='main-content' id="app">
+	<div class="main-banner d-grid col-2 position-relative">
+		{% if leftBlock %}
+			<a href="{{ leftBlock.ссылка }}" class="go_catalog_link _women d-flex align-items-end justify-content-end position-relative">
+				<div class="go_catalog_image position-absolute start-0 top-0 end-0 bottom-0">
+					<img class="w-100 h-100" src="{{ leftBlock.картинка }}" alt="">
+				</div>
+				{% if leftBlock.текст_ссылки %}
+					<div class="btn_go_catalog nunito">{{ leftBlock.текст_ссылки }}</div>
+				{% endif %}
+			</a>
+		{% endif %}
+		{% if rightBlock %}
+			<a href="{{ rightBlock.ссылка }}" class="go_catalog_link _men d-flex align-items-end justify-content-start position-relative">
+				<div class="go_catalog_image position-absolute start-0 top-0 end-0 bottom-0">
+					<img class="w-100 h-100" src="{{ rightBlock.картинка }}" alt="">
+				</div>
+				{% if rightBlock.текст_ссылки %}
+					<div class="btn_go_catalog nunito">{{ rightBlock.текст_ссылки }}</div>
+				{% endif %}
+			</a>
+		{% endif %}
+	</div>
+</main>
+{% include "partials/footer.twig" %}

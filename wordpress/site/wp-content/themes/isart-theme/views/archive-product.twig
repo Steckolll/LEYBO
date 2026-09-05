@@ -1,0 +1,51 @@
+{% include "partials/header.twig" %}
+
+<main class='main-content pt-prime pb-prime' id="app">
+	<div class="container">
+		<div class="breadcrumbs_block">
+			{{ breadcrumbs }}
+		</div>
+		<h1 class="h1 page_title m-0">{{ title }}</h1>
+		<div class="catalog_head d-flex align-items-center justify-content-between">
+			<div class="catalog_head_count">
+				{% do action('woocommerce_before_shop_loop') %}
+			</div>
+
+			<div class="catalog_head-control d-flex align-items-center gap-2">
+				<div class="btn btn_filter d-flex align-items-center js_alModal" data-modal="js_modal-filter">
+					<div class="btn_filter-name">Фильтр</div>
+					<div class="btn_filter-icon">
+						<img src="{{ site.theme.link }}/assets/images/filter.svg" alt="">
+					</div>
+				</div>
+				<div class="catalog_sort">
+					{{ function('do_shortcode','[wc_sorting]') }}
+				</div>
+			</div>
+		</div>
+		<div class="catalog_list d-grid col-4 gap-2 ajax_pagination">
+			{% for post in products %}
+				{{ fn('product_render', post) }}
+			{% endfor %}
+		</div>
+		{% include "partials/pagination.twig"  with { pagination: posts.pagination({show_all: false, mid_size: 1, end_size: 2}) } %}
+	</div>
+	<div class="alModal filter_modal js_modal-filter">
+		<div class="filter_head">
+			<div class="filter_title">Фильтры</div>
+			<span class="alModalClose js_alModalClose">
+				<img src="{{ site.theme.link }}/assets/images/close.svg" alt="">
+			</span>
+		</div>
+		<div class="filter_wrapper d-flex flex-column">
+			<div class="filter_list d-flex flex-column">
+				{{ function('do_shortcode','[br_filters_group group_id=83]') }}
+			</div>
+			<div class="filter_buttons d-flex flex-column">
+				{{ function('do_shortcode','[br_filters_group group_id=392]') }}
+
+			</div>
+		</div>
+	</div>
+</main>
+{% include "partials/footer.twig" %}

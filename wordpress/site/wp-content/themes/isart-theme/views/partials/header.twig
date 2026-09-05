@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+	<head>
+		<title>{{ wp_title }}</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+		<meta name="mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.css"/>
+		{% if post.id == "10" %}
+			<link href="{{ asset('assets/css/woocommerce.css') }}" rel="stylesheet" type="text/css">
+		{% endif %}
+		{{ function('wp_head') }}
+		<link rel="manifest" href="{{ asset('assets/images/favicon/manifest.json') }}">
+		<link rel="icon" type="image/png" href="{{ asset('assets/images/favicon/favicon-96x96.png') }}" sizes="96x96"/>
+		<link rel="icon" type="image/svg+xml" href="{{ asset('assets/images/favicon/favicon.svg') }}"/>
+		<link rel="shortcut icon" href="{{ asset('assets/images/favicon/favicon.ico') }}"/>
+		<link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/images/favicon/apple-touch-icon.png') }}"/>
+		<link rel="manifest" href="{{ asset('assets/images/favicon/site.webmanifest') }}"/>
+	</head>
+
+	<body class="{{ body_class }}">
+		<header class="main-header position-absolute top-0 start-0 end-0">
+			<div class="container">
+				<div class="main-header-content d-grid col-12 gap-1 align-items-center">
+					<div class="main-header-left d-flex align-items-center">
+						<button class="btn btn-hamburger btn-hamburger-1 js_hamburger d-flex align-items-center">
+							<div class="menu-icon position-relative">
+								<span class="position-absolute"></span>
+								<span class="position-absolute"></span>
+							</div>
+						</button>
+					</div>
+					<a href="{{ site.link }}" class="header_logo d-flex">
+						<img src="{{ asset('assets/images/logo_new.svg') }}" alt="">
+					</a>
+					<div class="main-header-right d-flex align-items-center justify-content-end">
+						<button class="btn btn_search header_control d-flex justify-content-center align-items-center">
+							<img src="{{ asset('assets/images/search.svg') }}" alt="">
+						</button>
+						<a href="{{ site.link }}/wishlist/" class="favorites_link header_control d-flex justify-content-center align-items-center">
+							<img src="{{ asset('assets/images/fav.svg') }}" alt="">
+						</a>
+						<div class="cart-fragment">
+							{% do action('header_action') %}
+						</div>
+						<a href="{{ site.link }}/my-account" class="account_link header_control d-flex justify-content-center align-items-center">
+							<img src="{{ asset('assets/images/profile.svg') }}" alt="">
+						</a>
+					</div>
+				</div>
+					{% if current_term and child_categories %}
+						<div class="main-header_cats">
+							<div class="swiper catsSwiper">
+								<div class="swiper-wrapper">
+									{% for cat in child_categories %}
+										<div class="swiper-slide">
+											<a href="{{ cat.link }}">{{ cat.title }}</a>
+										</div>
+									{% endfor %}
+								</div>
+							</div>
+						</div>
+					{% endif %}
+			</div>
+		</header>
+		<div class="search-widget-wrapper position-fixed top-0">
+			<button class="btn btn_search d-flex justify-content-center align-items-center">
+				<img src="{{ asset('assets/images/close.svg') }}" alt="">
+			</button>
+			{{ fn('do_shortcode','[ivory-search id="360" title="AJAX Search Form for WooCommerce"]') }}
+		</div>
+		<div class="mobile_menu">
+			<div class="mobile_menu_buttons d-flex align-items-center">
+				<div class="btn_tab btn_mobile_menu active nunito" data-id="women">Женщинам</div>
+				<div class="btn_tab btn_mobile_menu nunito" data-id="men">Мужчинам</div>
+			</div>
+			<div class="mobile_menu_list">
+				<div class="mobile_menu_list_inner">
+					<ul class="d-flex flex-column list-none p-0 m-0 vis" datatab-id="women">
+						{% for item in menu_women2.items %}
+							<li>
+								<a href="{{ item.link }}">{{ item.title }}</a>
+							</li>
+						{% endfor %}
+					</ul>
+					<ul class="d-flex flex-column list-none p-0 m-0" datatab-id="men">
+						{% for item in menu_men2.items %}
+							<li>
+								<a href="{{ item.link }}">{{ item.title }}</a>
+							</li>
+						{% endfor %}
+					</ul>
+				</div>
+				<ul class="d-flex flex-column list-none p-0 m-0">
+					{% for item in main_menu.items %}
+						<li>
+							<a href="{{ item.link }}">{{ item.title }}</a>
+						</li>
+					{% endfor %}
+				</ul>
+			</div>
+			<div class="menu_socials d-flex align-items-center">
+				{% if vk %}
+					<a href="{{ vk }}" target="_blank" class="soc-item d-flex align-items-center justify-content-center">
+						<img src="{{ asset('assets/images/vk.svg') }}" alt="">
+					</a>
+				{% endif %}
+				{% if tt %}
+					<a href="{{ tt }}" target="_blank" class="soc-item d-flex align-items-center justify-content-center">
+						<img src="{{ asset('assets/images/tt.svg') }}" alt="">
+					</a>
+				{% endif %}
+				{% if tg %}
+					<a href="{{ tg }}" target="_blank" class="soc-item d-flex align-items-center justify-content-center">
+						<img src="{{ asset('assets/images/telegram.svg') }}" alt="">
+					</a>
+				{% endif %}
+			</div>
+		</div>
+		<div class="mobile-nav d-flex justify-content-between align-items-center">
+			<button class="btn btn-hamburger btn-hamburger-1 js_hamburger mobile-nav-item d-flex flex-column align-items-center">
+				<div class="menu-icon position-relative">
+					<span class="position-absolute"></span>
+					<span class="position-absolute"></span>
+				</div>
+				<div class="mobile-nav-item--name">Меню</div>
+			</button>
+			<button class="btn btn_search mobile-nav-item d-flex flex-column justify-content-between align-items-center">
+				<div class="mobile-nav-item--icon">
+					<img src="{{ asset('assets/images/search.svg') }}" alt="">
+				</div>
+				<div class="mobile-nav-item--name">Поиск</div>
+			</button>
+			<a href="{{ site.link }}/wishlist/" class="mobile-nav-item d-flex flex-column justify-content-between align-items-center">
+				<div class="mobile-nav-item--icon">
+					<img src="{{ asset('assets/images/fav.svg') }}" alt="">
+				</div>
+				<div class="mobile-nav-item--name">Избранное</div>
+			</a>
+			<div class="cart-fragment">
+				{% do action('header_action') %}
+			</div>
+			<a href="{{ site.link }}/my-account" class="mobile-nav-item d-flex flex-column justify-content-between align-items-center">
+				<div class="mobile-nav-item--icon">
+					<img src="{{ asset('assets/images/profile.svg') }}" alt="">
+				</div>
+				<div class="mobile-nav-item--name">Кабинет</div>
+			</a>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,87 @@
+{% include "partials/header.twig" %}
+<main class='main-content pb-prime' id="app">
+	<div class="looks_banner d-flex align-items-center position-relative" style="background-image: url({{ site.theme.link }}/assets/images/looks2.jpg)">
+		<div class="container position-relative">
+			<h1 class="looks_title nunito text-center m-0">Готовые образы</h1>
+		</div>
+	</div>
+	<div class="looks-content">
+		<div class="container">
+			<div class="looks_cats">
+				<div class="swiper looksCatsSwiper">
+					<div class="swiper-wrapper">
+						{% for item in categories %}
+							<div class="swiper-slide">
+								<a href="{{ site.link }}/{{ item.taxonomy }}/{{ item.slug }}">{{ item.name }}</a>
+							</div>
+						{% endfor %}
+					</div>
+				</div>
+			</div>
+			<div class="looks_list d-flex flex-column gap-4 ajax_pagination">
+				{% for look in posts %}
+					<div class="look-row w-100 ajax_item">
+						<div class="look-head d-flex align-items-center justify-content-between">
+							<h2 class="h2 look-head-name m-0">{{ look.title }}</h2>
+							<a href="{{ site.link }}/men_looks/{{ look.terms('men_looks')[0].slug }}" class="go_looks_link d-flex align-items-center gap-1">
+								<div class="go_looks_link-name">Похожие образы</div>
+								<div class="go_looks_link-icon">
+									<img src="{{ site.theme.link }}/assets/images/arrow-r.svg" alt="">
+								</div>
+							</a>
+						</div>
+						<div class="look-content">
+							<div class="swiper lookSwiper">
+								<div class="swiper-wrapper">
+									{% for post in Post(look.товары) %}
+										<div
+											class="swiper-slide">
+											{# <a href="{{ post.link }}" class="product-card">
+											
+																							<div class="product-image position-relative">
+																								{% if post.thumbnail %}
+																									<img class="w-100 h-100 object-cover-50" src="{{ post.thumbnail.src }}" alt="">
+																								{% else %}
+																									<img class="w-100 h-100 object-cover-50" src="{{ site.link }}/wp-content/uploads/woocommerce-placeholder.png" alt="">
+																								{% endif %}
+																								<div class="product-card-bottom position-absolute">
+																									<div class="tags_list d-flex">
+																										<div class="prod_tag">New</div>
+																										<div class="prod_tag">Hit</div>
+																									</div>
+																									<object>
+																										<a href="?add-to-cart='{{ post.id }}'" data-quantity="1" data-product_id="{{ post.id }}" class="btn btn_buy button add_to_cart_button ajax_add_to_cart d-flex align-items-center justify-content-center w-100">Добавить в корзину</a>
+																									</object>
+																								</div>
+																							</div>
+																							<div class="product-info">
+																								<div class="product-prices text-center">
+																									<div class="current-price nunito">
+																										{% if post._price is iterable %}
+																											от
+																											{{ post._price[0]|number_format(0, '.', ' ') }}
+																											₽
+																										{% else %}
+																											{{ post._price|number_format(0, '.', ' ') }}
+																											₽
+																										{% endif %}
+																									</div>
+																								</div>
+																								<h2 class="product-card-name text-center m-0">{{ post.title }}</h2>
+																							</div>
+																						</a> #}
+											{{ fn('product_render', post) }}
+										</div>
+									{% endfor %}
+								</div>
+							</div>
+						</div>
+					</div>
+				{% endfor %}
+			</div>
+
+			{% include "partials/pagination.twig"  with { pagination: posts.pagination({show_all: false, mid_size: 1, end_size: 2}) } %}
+		</div>
+	</div>
+</main>
+{% include "partials/footer.twig" %}

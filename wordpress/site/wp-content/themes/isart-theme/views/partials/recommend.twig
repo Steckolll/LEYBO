@@ -1,0 +1,25 @@
+{% if recommend %}
+	<div class="look-row w-100">
+		<div class="look-head d-flex align-items-center justify-content-between">
+			<h2 class="h2 look-head-name m-0">Похожие товары</h2>
+			{# <a href="" class="go_looks_link d-flex align-items-center gap-1">
+																						<div class="go_looks_link-name">Смотреть все</div>
+																						<div class="go_looks_link-icon">
+																							<img src="{{ site.theme.link }}/assets/images/arrow-r.svg" alt="">
+																						</div>
+																					</a> #}
+		</div>
+		<div class="look-content">
+			<div class="swiper lookSwiper">
+				<div class="swiper-wrapper">
+					{% for post in recommend %}
+						<div class="swiper-slide">
+							{{ fn('product_render', post) }}
+						</div>
+					{% endfor %}
+				</div>
+			</div>
+		</div>
+	</div>
+
+{% endif %}

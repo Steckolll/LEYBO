@@ -1,0 +1,109 @@
+{% include "partials/header.twig" %}
+
+<main class='main-content pt-prime pb-prime' id="app">
+	<div class="container">
+		<div class="breadcrumbs_block">
+			{{ breadcrumbs }}
+		</div>
+		<div {{ fn('wc_product_class', '', product) }}>
+			<div class="product_content d-grid">
+				{% do action('woocommerce_before_single_product_summary') %}
+
+				{# <div class="product_gallery d-grid">
+								<div thumbsslider="" class="swiper galThumbsSwiper">
+									<div class="swiper-wrapper">
+										{% if post.thumbnail %}
+											<div class="swiper-slide">
+												<img class="w-100 h-100" src="{{post.thumbnail.src}}"/>
+											</div>
+										{% endif %}
+										{% if product.get_gallery_image_ids %}
+											{% for image in product.get_gallery_image_ids %}
+												<div class="swiper-slide">
+													<img class="w-100 h-100" src="{{ Image(image) }}"/>
+												</div>
+											{% endfor %}
+										{% endif %}
+									</div>
+								</div>
+								<div>
+									<div class="swiper galMainSwiper">
+										<div class="swiper-wrapper">
+											{% if post.thumbnail %}
+												<div data-fancybox="" href="{{post.thumbnail.src}}" class="swiper-slide">
+													<img class="js_product-image w-100 h-100" src="{{post.thumbnail.src}} "/>
+												</div>
+											{% endif %}
+											{% if product.get_gallery_image_ids %}
+												{% for image in product.get_gallery_image_ids %}
+													<div data-fancybox="" href="{{ Image(image) }}" class="swiper-slide">
+														<img class="w-100 h-100" src="{{ Image(image) }}"/>
+													</div>
+												{% endfor %}
+											{% endif %}
+										</div>
+									</div>
+								</div>
+							</div> #}
+				<div class="product_info d-flex flex-column gap-4">
+					<div class="product_info-top text-center">
+						<h1 class="h1 m-0">{{ post.title }}</h1>
+						<div class="product_prices">
+							{% if variable_product %}
+								<div class="h1 current_price"></div>
+							{% else %}
+								<div class="h1 current_price">{{ post._price|number_format(0, '.', ' ') }}
+									₽</div>
+							{% endif %}
+						</div>
+					</div>
+					{% do action('woocommerce_single_product_summary') %}
+
+
+					<div class="product_accordion">
+						<div class="faq-items d-flex flex-column">
+							{% if post.content %}
+								<div class="faq-item">
+									<div class="faq-item-header d-flex align-items-center justify-content-between">
+										<div class="faq-item-name rubik_font d-flex align-items-center">Информация о товаре</div>
+										<div class="faq-item-btn btn justify-content-center">
+											<img src="{{ site.theme.link }}/assets/images/dropdown2.svg" alt="">
+										</div>
+									</div>
+									<div class="faq-item-content w-100">
+										{{ post.content }}
+									</div>
+								</div>
+							{% endif %}
+							<div class="faq-item">
+								<div class="faq-item-header d-flex align-items-center justify-content-between">
+									<div class="faq-item-name rubik_font d-flex align-items-center">Доставка</div>
+									<div class="faq-item-btn btn justify-content-center">
+										<img src="{{ site.theme.link }}/assets/images/dropdown2.svg" alt="">
+									</div>
+								</div>
+								<div class="faq-item-content w-100">
+									Сроки доставки: от 1 до 6 дней (в зависимости от региона) с момента передачи заказа курьерской службе (после изменения статуса заказа на "Отправлен").
+								</div>
+							</div>
+							<div class="faq-item">
+								<div class="faq-item-header d-flex align-items-center justify-content-between">
+									<div class="faq-item-name rubik_font d-flex align-items-center">Оплата</div>
+									<div class="faq-item-btn btn justify-content-center">
+										<img src="{{ site.theme.link }}/assets/images/dropdown2.svg" alt="">
+									</div>
+								</div>
+								<div class="faq-item-content w-100">
+									Сроки доставки: от 1 до 6 дней (в зависимости от региона) с момента передачи заказа курьерской службе (после изменения статуса заказа на "Отправлен").
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			{% include "partials/recommend.twig" %}
+
+		</div>
+	</div>
+</main>
+{% include "partials/footer.twig" %}

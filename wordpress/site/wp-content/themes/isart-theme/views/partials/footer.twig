@@ -1,0 +1,199 @@
+<footer class="main-footer">
+	<div class="container">
+		<div class="footer-content d-flex align-items-center justify-content-between gap-4">
+			<div class="footer-menu">
+				<ul class="d-flex align-items-center gap-4 list-none m-0 p-0">
+					{% for item in footer_menu.items %}
+					<li>
+						<a href="{{ item.link }}">{{ item.title }}</a>
+					</li>
+					{% endfor %}
+				</ul>
+			</div>
+			<div class="footer_socials d-flex gap-1">
+				{% if vk %}
+				<a href="{{ vk }}" class="soc_link d-flex align-items-center justify-content-center">
+					<img class="h-100" src="{{ asset('assets/images/vk.svg') }}" alt="">
+				</a>
+				{% endif %}
+				{% if tt %}
+				<a href="{{ tt }}" class="soc_link d-flex align-items-center justify-content-center">
+					<img class="h-100" src="{{ asset('assets/images/tt.svg') }}" alt="">
+				</a>
+				{% endif %}
+				{% if tg %}
+				<a href="{{ tg }}" class="soc_link d-flex align-items-center justify-content-center">
+					<img class="h-100" src="{{ asset('assets/images/telegram.svg') }}" alt="">
+				</a>
+				{% endif %}
+			</div>
+		</div>
+		<div class="under-footer d-flex align-items-center justify-content-between gap-4">
+			<div class="copyright">©
+				{{ now|date('Y') }}
+				ЛЕЙБО
+			</div>
+			<a href="https://wolfcollab.com/" target="_blank" rel="noopener" class="isart d-flex align-items-center gap-1">Разработано
+				<img src="{{ asset('assets/images/wolfcollab-logo.png') }}" alt="WolfCollab" width="20" height="20" style="height:20px;width:auto;display:block">
+				<span>WolfCollab</span>
+			</a>
+
+		</div>
+	</div>
+</footer>
+<div id="overlay"></div>
+<div class="overlay"></div>
+
+
+<div class="alModal js_modal-1">
+	<div class="alModalContent alModalContent--modal">
+		<span class="alModalClose js_alModalClose">
+			<img src="{{ asset('assets/images/close.svg') }}" alt="">
+		</span>
+		<div class="alModalContent-title position-relative">Купить в 1 клик</div>
+		<form class="d-flex flex-column" action="javascript:void(0);" id="alxModalForm1">
+			<input class="one_click_product" name="prod_name" type="hidden" value="">
+			<input name="name" class="alModalInput alModalInputName" type="text" placeholder="Имя">
+			<input required="" name="phone" class="alModalInput alModalInputphone maskedPhone" type="tel" placeholder="Телефон">
+			<input name="email" class="alModalInput alModalInputName" type="email" placeholder="Почта">
+			<textarea class="alModalTextarea" name="desc" placeholder="Ваше обращение"></textarea>
+			<label class="custom-checkbox d-flex align-items-start">
+				<input required type="checkbox" name="agree" value="">
+				<span class="custom-checkbox_name">Нажимая кнопку, вы даете согласие на обработку персональных данных, в соответствии с политикой конфиденциальности</span>
+			</label>
+			<label class="custom-checkbox d-flex align-items-start">
+				<input type="checkbox" name="agree" value="">
+				<span class="custom-checkbox_name">Согласие на получение рекламных предложений по телефону и email</span>
+			</label>
+			<input type="submit" class="btn btn_main btn_submit alModalButton" name="--" value="Отправить">
+		</form>
+	</div>
+</div>
+
+
+<div class="alModal alModalThank js_modal-3">
+	<div class="alModalContent">
+		<div class="alModalContent-title position-relative">ВАША ЗАЯВКА ПРИНЯТА</div>
+		<p class="thank_words">В ближайшее время с вами свяжется наш менеджер!</p>
+	</div>
+</div>
+
+{{ function('wp_footer') }}
+<script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.umd.js"></script>
+<script type="text/javascript">
+	function showModal(modalName) {
+		$('.overlay').fadeIn(500, function() {
+			var ModalLeft = ($(window).width() - $(modalName).outerWidth()) / 2;
+			var ModalTop = (window.innerHeight - $(modalName).outerHeight()) / 2;
+			$(modalName).removeAttr('css');
+			if (ModalTop <= 50) {
+				ModalTop = 20;
+
+			}
+			setTimeout(function() {
+				$(modalName).css('display', 'block').animate({
+					opacity: 1,
+					left: ModalLeft + 'px',
+					top: ModalTop + 'px'
+				}, 300);
+			}, 50)
+		});
+	}
+	$(document).ready(function($) {
+		var ModalTop;
+
+		// Бургер: клик по «Женщинам»/«Мужчинам» ведёт сразу в каталог (как с главной)
+		$(document).on('click', '.btn_mobile_menu', function() {
+			var id = $(this).attr('data-id');
+			var url = $('.mobile_menu_list_inner ul[datatab-id="' + id + '"] a').attr('href');
+			if (url) { window.location.href = url; }
+		});
+
+
+		$(window).resize(function(event) {
+			if ($('.alModal').is(':visible'))
+				showModal('.alModal:visible');
+
+
+
+		});
+
+
+		$(document).on('click', '.js_alModal', function() {
+			event.preventDefault();
+			var modalClass = '.' + $(this).attr('data-modal');
+			$('.alModal').css({
+				'display': 'none',
+				'top': '100%',
+				'left': '50%'
+			});
+			showModal(modalClass);
+		});
+
+		$('.js_alModalClose, .overlay').click(function() {
+			$('.alModal').animate({
+				opacity: 0
+			}, 200, function() {
+				$(this).css({
+					'display': 'none',
+					'top': '100%',
+					'left': '50%'
+				});
+				$('.overlay').fadeOut(400);
+			});
+		});
+
+
+		$('#alxModalForm1').submit(function() {
+			if (document.forms.alxModalForm1.checkValidity()) {
+				var thisModal = $(this).parents('.alModal');
+				form = $('#alxModalForm1').serialize();
+				$.ajax({
+					type: "POST",
+					url: "{{ site.link }}/obr.php",
+					data: form,
+					success: function(msg) {
+						thisModal.animate({
+							opacity: 0
+						}, 200, function() {
+							$(this).css({
+								'display': 'none',
+								'top': '100%',
+								'left': '50%'
+							});
+						});
+						thisModal.find('.alModalInput').val('');
+						thisModal.find('textarea').val('');
+						showModal('.alModalThank');
+					}
+				});
+			}
+		});
+		$('#alxModalForm2').submit(function() {
+			if (document.forms.alxModalForm2.checkValidity()) {
+				var thisModal = $(this).parents('.alModal');
+				form = $('#alxModalForm2').serialize();
+				$.ajax({
+					type: "POST",
+					url: "{{ site.link }}/obr.php",
+					data: form,
+					success: function(msg) {
+						thisModal.animate({
+							opacity: 0
+						}, 200, function() {
+							$(this).css({
+								'display': 'none',
+								'top': '100%',
+								'left': '50%'
+							});
+						});
+						thisModal.find('.alModalInput').val('');
+						thisModal.find('textarea').val('');
+						showModal('.alModalThank');
+					}
+				});
+			}
+		});
+	});
+
+</script>

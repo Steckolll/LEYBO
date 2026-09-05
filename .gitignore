@@ -1,0 +1,87 @@
+# ---- Secrets & access ----
+# Никогда не коммить конфиги, пароли, ключи
+.env
+.env.*
+*.secret
+.mcp.json
+secrets/
+config/local.*
+opencode.json
+opencode.jsonc
+
+# ---- Backups / data dumps ----
+# Содержат персональные данные клиентов, всё что со снятием данных
+backup/
+*.zip
+*.sql
+*.sql.gz
+*.tar.gz
+*.mariadb
+*.json.bak
+
+# ---- Local Wordpress copy / staging ----
+# WordPress core and downloaded third-party code are restored from backup,
+# not maintained in this project repository.
+wordpress/site/wp-admin/
+wordpress/site/wp-includes/
+wordpress/site/wp-content/plugins/
+wordpress/site/wp-content/uploads/
+wordpress/site/wp-content/cache/
+wordpress/site/wp-content/upgrade/
+wordpress/site/wp-content/backup*/
+wordpress/site/wp-content/leybo-backups/
+wordpress/site/dup-installer/
+wordpress/site/wp-content/mu-plugins/
+wordpress/wp-content/uploads/
+wordpress/wp-content/plugins/
+wordpress/wp-config.php
+wordpress/**/debug.log
+wordpress/site/wp-content/novamira-sandbox/leybo-temp-mcp-access.php
+wordpress/site/wp-content/novamira-sandbox/prices-before-*.json
+wordpress/site/wp-content/novamira-sandbox/wp-cli-jobs/
+wordpress/site/wp-content/themes/twentytwentyfive/
+wordpress/site/*installer*.php
+wordpress/site/diag-*.php
+wordpress/site/*installer*bootlog*.txt
+wordpress/site/wp-content/themes/isart-theme/email-send.php
+
+# Local WordPress bootstrap/core files. Keep project-owned config and docs.
+wordpress/site/wp-*.php
+wordpress/site/index.php
+wordpress/site/xmlrpc.php
+wordpress/site/license.txt
+wordpress/site/readme.html
+wordpress/site/.htaccess
+
+# Project-owned staging safeguards are versioned explicitly.
+!wordpress/site/.htaccess
+!wordpress/site/wp-content/mu-plugins/
+!wordpress/site/wp-content/mu-plugins/109-isolation.php
+
+# The database is stored in Docker volume; never commit it.
+*.ibd
+*.frm
+*.MYD
+*.MYI
+
+# ---- Personal / exported data ----
+exports/
+# Реальные заказы, пользователи, адреса — обезличиваем, но исходники не храним в git
+**/*orders*
+**/*customers*
+**/*users*
+
+# ---- Operating system ----
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# ---- Node / build artifacts ----
+node_modules/
+dist/
+build/
+*.log
+
+# ---- Local Git / IDE ----
+.idea/
+.vscode/

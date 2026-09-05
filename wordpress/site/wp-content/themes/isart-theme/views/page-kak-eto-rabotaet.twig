@@ -1,0 +1,161 @@
+{% include "partials/header.twig" %}
+
+<main class='main-content lh' id="app">
+
+	{# ── Первый экран ──────────────────────────────────────── #}
+	<section class="lh-hero">
+		<div class="container">
+			<div class="lh-hero-eyebrow">Выкуп под заказ из Китая</div>
+			<h1 class="lh-hero-h">Оригинальные кроссовки <b>без магазинной наценки</b></h1>
+			<p class="lh-hero-p">ЛЕЙБО — не перекупщик со склада. Мы выкупаем пару под ваш заказ на крупнейшей китайской площадке и привозим её в Россию. Вы платите цену площадки и нашу работу — а не тройную наценку розницы.</p>
+			<div class="lh-btns">
+				<a href="{{ site.link }}/product-category/women/katalog-women/" class="lh-btn">Женщинам</a>
+				<a href="{{ site.link }}/product-category/men/katalog-men/" class="lh-btn lh-btn--ghost">Мужчинам</a>
+			</div>
+			<div class="lh-stats">
+				<div>
+					<div class="lh-stat-n">{{ leybo_stats.models }}</div>
+					<div class="lh-stat-t">моделей доступно к выкупу прямо сейчас</div>
+				</div>
+				<div>
+					<div class="lh-stat-n">{{ leybo_stats.sizes }}</div>
+					<div class="lh-stat-t">размеров подтверждено на площадке</div>
+				</div>
+				<div>
+					<div class="lh-stat-n">2&nbsp;раза</div>
+					<div class="lh-stat-t">в сутки сверяем цены и наличие</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	{# ── Четыре обещания ───────────────────────────────────── #}
+	<section>
+		<div class="container">
+			<h2 class="lh-h">Почему у нас</h2>
+			<p class="lh-sub">Четыре вещи, которые отличают выкуп под заказ от обычного интернет-магазина.</p>
+			<div class="lh-marks">
+				<div class="lh-mark">
+					<div class="lh-mark-n">01</div>
+					<h3 class="lh-mark-h">Проверка подлинности</h3>
+					<p class="lh-mark-p">Пара проходит проверку на площадке перед отправкой. Мы отбираем позиции вручную и не работаем с сомнительными продавцами.</p>
+				</div>
+				<div class="lh-mark">
+					<div class="lh-mark-n">02</div>
+					<h3 class="lh-mark-h">Честная цена</h3>
+					<p class="lh-mark-p">Цена на сайте считается от реальной стоимости пары в юанях по курсу дня. Никаких «старых цен», зачёркнутых ради скидки.</p>
+				</div>
+				<div class="lh-mark">
+					<div class="lh-mark-n">03</div>
+					<h3 class="lh-mark-h">Размеры без вранья</h3>
+					<p class="lh-mark-p">Размер, которого сейчас нет на площадке, нельзя выбрать. Не будет истории «оплатили, а потом отменили заказ».</p>
+				</div>
+				<div class="lh-mark">
+					<div class="lh-mark-n">04</div>
+					<h3 class="lh-mark-h">Доставка до ПВЗ</h3>
+					<p class="lh-mark-p">Пара едет из Китая и передаётся в СДЭК до вашего пункта выдачи — того, который вы выберете сами.</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	{# ── Как это работает ──────────────────────────────────── #}
+	<section>
+		<div class="container">
+			<h2 class="lh-h">Как это работает</h2>
+			<p class="lh-sub">Четыре шага от вашего выбора до пункта выдачи. Никаких предоплат по частям и переписок в мессенджерах.</p>
+			<div class="lh-steps">
+				<div class="lh-step">
+					<div class="lh-step-n">1</div>
+					<div>
+						<h3 class="lh-step-h">Выбираете пару</h3>
+						<p class="lh-step-p">Цены и размеры сверяются с площадкой дважды в сутки, поэтому на сайте видно настоящее наличие, а не остатки полугодовой давности.</p>
+					</div>
+				</div>
+				<div class="lh-step">
+					<div class="lh-step-n">2</div>
+					<div>
+						<h3 class="lh-step-h">Оформляете заказ</h3>
+						<p class="lh-step-p">Оплата одна и сразу за всё: выкуп пары, доставку из Китая и передачу в СДЭК.</p>
+					</div>
+				</div>
+				<div class="lh-step">
+					<div class="lh-step-n">3</div>
+					<div>
+						<h3 class="lh-step-h">Выкупаем в Китае</h3>
+						<p class="lh-step-p">Заявка уходит нашему байеру автоматически в момент оплаты. Пара выкупается именно та и именно вашего размера.</p>
+					</div>
+				</div>
+				<div class="lh-step">
+					<div class="lh-step-n">4</div>
+					<div>
+						<h3 class="lh-step-h">Привозим и отдаём в СДЭК</h3>
+						<p class="lh-step-p">Заказ едет в Россию и передаётся в СДЭК до выбранного вами пункта выдачи. Остаётся забрать.</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	{# ── Хиты ──────────────────────────────────────────────── #}
+	{% if leybo_hits %}
+		<section>
+			<div class="container">
+				<div class="lh-head-row">
+					<div>
+						<h2 class="lh-h">Хиты</h2>
+						<p class="lh-sub">Модели, которые разбирают быстрее остальных. Всё, что здесь показано, доступно к выкупу сегодня.</p>
+					</div>
+					<a href="{{ site.link }}/product-category/men/katalog-men/" class="lh-more"><span>Весь каталог</span></a>
+				</div>
+				<div class="lh-grid">
+					{% for post in leybo_hits %}
+						{{ fn('product_render', post) }}
+					{% endfor %}
+				</div>
+			</div>
+		</section>
+	{% endif %}
+
+	{# ── Вопросы ───────────────────────────────────────────── #}
+	<section>
+		<div class="container">
+			<div class="lh-head-row">
+				<h2 class="lh-h">Коротко о главном</h2>
+				<a href="{{ site.link }}/faq/" class="lh-more"><span>Все вопросы</span></a>
+			</div>
+			<div class="lh-faq">
+				<div class="lh-q">
+					<h3 class="lh-q-h">Это точно оригинал?</h3>
+					<p class="lh-q-p">Да. Пара выкупается на площадке, где подлинность проверяют до отправки покупателю.</p>
+				</div>
+				<div class="lh-q">
+					<h3 class="lh-q-h">Почему дешевле, чем в магазине?</h3>
+					<p class="lh-q-p">Потому что между вами и парой нет розничной сети с арендой и складом. Вы платите стоимость пары и нашу работу по выкупу и доставке.</p>
+				</div>
+				<div class="lh-q">
+					<h3 class="lh-q-h">Сколько ждать?</h3>
+					<p class="lh-q-p">Срок складывается из двух частей: выкуп пары в Китае и дорога до России. Мы сообщим, когда заказ выедет.</p>
+				</div>
+				<div class="lh-q">
+					<h3 class="lh-q-h">А если размер не подойдёт?</h3>
+					<p class="lh-q-p">Порядок описан в <a href="{{ site.link }}/usloviya-vozvrata/">условиях возврата</a>. Перед заказом сверьтесь с размерной сеткой в карточке — она у каждой модели своя.</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	{# ── Призыв ────────────────────────────────────────────── #}
+	<section class="lh-cta">
+		<div class="container">
+			<h2 class="lh-h">Найдите свою пару</h2>
+			<p class="lh-cta-p">{{ leybo_stats.models }} моделей доступны к выкупу прямо сейчас. Наличие обновляется автоматически.</p>
+			<div class="lh-btns">
+				<a href="{{ site.link }}/product-category/women/katalog-women/" class="lh-btn">Женщинам</a>
+				<a href="{{ site.link }}/product-category/men/katalog-men/" class="lh-btn lh-btn--ghost">Мужчинам</a>
+			</div>
+		</div>
+	</section>
+
+</main>
+{% include "partials/footer.twig" %}

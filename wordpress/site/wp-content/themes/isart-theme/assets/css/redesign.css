@@ -1,0 +1,290 @@
+.woocommerce-variation-availability {
+	display: none;
+}
+
+.rtwpvg-images.rtwpvg-has-product-thumbnail .rtwpvg-wrapper .rtwpvg-thumbnail-wrapper .rtwpvg-thumbnail-slider .rtwpvg-thumbnail-image img,
+.object-cover-50,
+.rtwpvg-single-image-container img,
+.product_gallery .swiper-slide img,
+.wvg-single-gallery-image-container img,
+.rtwpvg-images.rtwpvg-has-product-thumbnail .rtwpvg-grid-layout .rtwpvg-slider img,
+.rtwpvg-images.rtwpvg-has-product-thumbnail .rtwpvg-wrapper .rtwpvg-slider img {
+	-o-object-fit: scale-down;
+	object-fit: scale-down;
+}
+
+
+ul.variable-items-wrapper.button-variable-items-wrapper.wvs-style-rounded {
+	gap: 10px;
+}
+
+.woo-variation-swatches .wvs-style-rounded.variable-items-wrapper .variable-item:not(.radio-variable-item) {
+	margin: 0 !important;
+}
+
+.woo-variation-swatches .wvs-style-rounded.variable-items-wrapper .variable-item:not(.radio-variable-item) .variable-item-span {
+	border-radius: 0 !important;
+	font-size: 14px !important;
+}
+
+.woo-variation-swatches .variable-items-wrapper .variable-item:not(.radio-variable-item).button-variable-item {
+	border-radius: 0 !important;
+	width: 47px;
+	height: 47px;
+}
+
+
+.faq-item.active:has(select#cvet) {
+	display: none;
+}
+
+.table_razmer {
+	font-family: var(--font-family);
+	font-weight: 400;
+	font-size: 12px;
+	color: #bbb;
+	display: block;
+	margin: 10px 0 5px;
+	-webkit-transition: all .3s ease-out;
+	transition: all .3s ease-out;
+}
+
+.table_razmer:hover {
+	color: #000;
+}
+
+.modal_table_box {
+	max-width: 860px;
+	width: 100%;
+	max-height: 80vh;
+	overflow: auto;
+	display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex;
+	-webkit-box-orient: vertical;
+	-webkit-box-direction: normal;
+	-ms-flex-flow: column;
+	flex-flow: column;
+	padding-bottom: 25px;
+}
+
+.js_modal-table.alModal {
+	max-width: 980px;
+}
+
+.js_modal-table .table_title {
+	font-family: var(--third-family);
+	font-weight: 700;
+	font-size: 24px;
+	color: #000;
+	margin: 0 auto 20px 0;
+	text-align: left;
+}
+
+.js_modal-table table {
+	border: 0;
+	font-family: var(--font-family);
+	font-weight: 400;
+	font-size: 18px;
+	color: #000;
+	text-align: left;
+}
+
+.js_modal-table thead {
+	background: #ebebeb;
+}
+
+.js_modal-table thead th {
+	padding: 10px;
+	font-weight: 400;
+}
+
+.js_modal-table td,
+.js_modal-table th {
+	border: 1px solid #EBEBEB;
+	min-width: 76px;
+	padding: 10px;
+}
+
+
+.product-quantity:has(input[type="hidden"]) {
+	display: none;
+}
+
+.coupon_wrapper {
+	display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex;
+	-webkit-box-orient: vertical;
+	-webkit-box-direction: normal;
+	-ms-flex-flow: column;
+	flex-flow: column;
+	margin-top: 30px;
+}
+
+.coupon_title {
+	font-family: var(--font-family);
+	font-weight: 400;
+	font-size: 18px;
+	color: #000;
+	margin: 0 0 10px;
+}
+
+.coupon_wrapper input {
+	border: 1px solid #bbb;
+	border-radius: 5px;
+	padding: 10px 20px;
+	height: 36px;
+	margin-right: 5px;
+}
+
+.coupon_wrapper button {
+	border-radius: 5px;
+	padding: 10px 20px;
+	height: 36px;
+	background: #bbb;
+	font-family: var(--font3);
+	font-weight: 400;
+	font-size: 16px;
+	line-height: 100%;
+	color: #fff;
+	border: 0;
+	cursor: pointer;
+}
+
+.coupon_wrapper .coupon p {
+	margin: 10px 0;
+	max-width: 380px;
+	color: #ffa000;
+	text-shadow: 0 0 #ff0000;
+}
+
+.woocommerce-notices-wrapper .woocommerce-message {
+	margin: 0 0 15px;
+	font-size: 20px;
+	text-shadow: 0 0 #ffa000;
+	color: #ffa000;
+}
+
+.coupon_item_form {
+	display: block !important;
+}
+
+.coupon_item_form .coupon_wrapper {
+	margin-top: 0;
+}
+
+.coupon_item_form .coupon_wrapper .coupon {
+	display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex;
+	-webkit-box-orient: horizontal;
+	-webkit-box-direction: normal;
+	-ms-flex-flow: row wrap;
+	flex-flow: row wrap;
+}
+
+.coupon_checkout_box {
+	padding-bottom: 50px;
+}
+
+.form-row-first {
+	display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex;
+	-webkit-box-orient: vertical;
+	-webkit-box-direction: normal;
+	-ms-flex-flow: column;
+	flex-flow: column;
+	gap: 10px;
+}
+
+.cupon_box {
+	display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex;
+	-webkit-box-orient: vertical;
+	-webkit-box-direction: reverse;
+	-ms-flex-flow: column-reverse;
+	flex-flow: column-reverse;
+	gap: 5px;
+	width: 100%;
+}
+
+.cupon_box a {
+	padding-left: 5px;
+	display: inline-block;
+	color: var(--primary-color);
+}
+
+
+@media screen and (min-width: 320px) and (max-width:767px) {
+
+
+	.js_modal-table .table_title {
+		font-size: 20px;
+	}
+
+	.modal_table_box {
+		padding: 0;
+	}
+
+	.table_scroll {
+		overflow: auto;
+		width: 100%;
+	}
+
+	.table_scroll table {
+		min-width: 525px;
+	}
+
+	.js_modal-table table {
+		font-size: 14px;
+	}
+
+	.js_modal-table td,
+	.js_modal-table th {
+		min-width: 44px;
+		padding: 8px;
+	}
+
+	.coupon_wrapper .coupon {
+		display: -webkit-box;
+		display: -ms-flexbox;
+		display: flex;
+		-webkit-box-orient: vertical;
+		-webkit-box-direction: normal;
+		-ms-flex-flow: column;
+		flex-flow: column;
+		gap: 5px;
+		width: 100%;
+	}
+
+	.coupon_checkout_box {
+		padding-bottom: 30px;
+	}
+
+	.checkout_coupon p {
+		margin-bottom: 0 !important;
+		width: 100%;
+	}
+
+	.checkout_coupon p button {
+		width: 100%;
+	}
+
+
+}
+
+
+
+.faq-item:has(select[name="attribute_pa_cvet"]) {
+	display: none;
+}
+
+/* Главная: показывать обувь у моделей — привязка к низу вместо верха (на широких экранах не режет обувь) */
+.go_catalog_image img {
+	object-position: 44% bottom;
+}
+
+/**/

@@ -1,0 +1,16 @@
+{% include "partials/header.twig" %}
+
+<main class='main-content pt-prime pb-prime' id="app">
+	<div class="delivery-content">
+		<div class="container">
+			<div class="breadcrumbs_block">
+				{{ breadcrumbs }}
+			</div>
+			<h1 class="h1 page_title m-0 text-center">{{ post.title }}</h1>
+			<div class="post_content text-center">
+				{{ post.content }}
+			</div>
+		</div>
+	</div>
+</main>
+{% include "partials/footer.twig" %}

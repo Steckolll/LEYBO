@@ -1,0 +1,15 @@
+{% include "partials/header.twig" %}
+<main class='main-content default-content' id="app">
+	<div class="default-page post_page pt-prime pb-prime">
+		<div class="container">
+			<div class="breadcrumbs_block">
+				{{ breadcrumbs }}
+			</div>
+			<h1 class="h1 page_title m-0">{{ post.title }}</h1>
+			<div class="default_text">
+				{{ post.content }}
+			</div>
+		</div>
+	</div>
+</main>
+{% include "partials/footer.twig" %}

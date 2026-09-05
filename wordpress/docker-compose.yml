@@ -1,0 +1,40 @@
+services:
+  db:
+    image: mysql:8.4
+    container_name: leybo-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: leybo
+      MYSQL_USER: leybo
+      MYSQL_PASSWORD: leybo_pass
+    command: [
+      "--character-set-server=utf8mb4",
+      "--collation-server=utf8mb4_unicode_520_ci",
+      "--innodb-buffer-pool-size=512M",
+    ]
+    volumes:
+      - leybo_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpass"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  web:
+    build: .
+    container_name: leybo-web
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8081:80"
+    volumes:
+      - ../wordpress/site:/var/www/html
+      - ./apache/000-default.conf:/etc/apache2/sites-available/000-default.conf:ro
+    environment:
+      WORDPRESS_DEBUG: "1"
+
+volumes:
+  leybo_db_data:

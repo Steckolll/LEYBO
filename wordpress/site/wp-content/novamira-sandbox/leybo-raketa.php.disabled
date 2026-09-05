@@ -1,0 +1,754 @@
+<?php
+/**
+ * LEYBO -> Raketa (raketaapi.ru).
+ *
+ * Raketa does not accept "please buy this for me" requests - a Raketa order is a
+ * parcel that is ALREADY moving, keyed by its Chinese track number. That number
+ * cannot exist while the customer is still on the checkout page, so the chain is
+ * necessarily two-step:
+ *
+ *   1. order placed  -> payload is assembled and validated here, locally, against
+ *                       every rule Raketa enforces. Problems surface now, in the
+ *                       shop, instead of two weeks later as a bare 422.
+ *   2. Chinese track -> the moment it is known (order screen, bulk paste, or the
+ *                       REST hook) POST /v1/order fires by itself. No button.
+ *
+ * Paying (/v1/order/pay) spends real money off the Raketa balance and is left
+ * deliberately manual.
+ *
+ * Product data (spuId for the customs link, the Latin name, the CNY price) comes
+ * from the same leyboapi that already feeds prices into the shop, so the declared
+ * value always matches what was actually paid on dewu.
+ */
+
+if (!defined('ABSPATH')) { exit; }
+
+const LEYBO_RAKETA_BASE    = 'https://raketaapi.ru';
+const LEYBO_RAKETA_PRODUCT = 'https://m.poizon.com/router/product/ProductDetail?spuId=%s';
+const LEYBO_RAKETA_LOOKUP  = 'https://leyboapi.vastubase.store/products';
+
+/* ------------------------------------------------------------------ options */
+
+function leybo_raketa_opt($k, $default = '') {
+    return get_option('leybo_raketa_' . $k, $default);
+}
+
+/** Carrier strings must match Raketa's provider EXACTLY or the order 422s. */
+function leybo_raketa_carriers() {
+    return [
+        'СДЭК'             => ['Посылка склад-склад', 'Экономичная посылка склад-склад'],
+        'ПОЧТА РОССИИ'     => ['Еком маркетплейс Наземный', 'Еком маркетплейс Экспресс'],
+        'ЯНДЕКС-ДОСТАВКА'  => ['Тариф быстрый'],
+        'RAKETA'           => ['Стандарт', 'Эконом'],
+    ];
+}
+
+/* -------------------------------------------------------- field normalisers */
+
+/**
+ * "Иванов Иван Иванович" -> [last, first, middle].
+ * A field labelled ФИО is filled surname-first by every Russian speaker; anything
+ * that does not split into at least two Cyrillic words is rejected rather than
+ * guessed, because a wrong name on a customs declaration means a stuck parcel.
+ */
+function leybo_raketa_split_fio($fio) {
+    $parts = preg_split('/\s+/u', trim((string)$fio), -1, PREG_SPLIT_NO_EMPTY);
+    $parts = array_values(array_filter($parts, function ($p) {
+        return (bool)preg_match('/^[А-Яа-яЁё\-]+$/u', $p);
+    }));
+    if (count($parts) < 2) { return null; }
+    return [
+        'last_name'   => $parts[0],
+        'first_name'  => $parts[1],
+        'middle_name' => isset($parts[2]) ? $parts[2] : '',
+    ];
+}
+
+/** "45 12 123456" / "4512123456" -> ['4512', '123456'] */
+function leybo_raketa_split_passport($raw) {
+    $d = preg_replace('/\D+/', '', (string)$raw);
+    if (strlen($d) !== 10) { return null; }
+    return [substr($d, 0, 4), substr($d, 4)];
+}
+
+/** Raketa wants 10 digits, no country code. */
+function leybo_raketa_phone($raw) {
+    $d = preg_replace('/\D+/', '', (string)$raw);
+    if (strlen($d) === 11 && ($d[0] === '7' || $d[0] === '8')) { $d = substr($d, 1); }
+    return strlen($d) === 10 ? $d : null;
+}
+
+/** Personal INN carries two check digits - a typo here is caught before customs. */
+function leybo_raketa_valid_inn($inn) {
+    $inn = preg_replace('/\D+/', '', (string)$inn);
+    if (strlen($inn) !== 12) { return false; }
+    $d = array_map('intval', str_split($inn));
+    $w1 = [7, 2, 4, 10, 3, 5, 9, 4, 6, 8];
+    $w2 = [3, 7, 2, 4, 10, 3, 5, 9, 4, 6, 8];
+    $s1 = 0; foreach ($w1 as $i => $w) { $s1 += $w * $d[$i]; }
+    $s2 = 0; foreach ($w2 as $i => $w) { $s2 += $w * $d[$i]; }
+    return ($s1 % 11) % 10 === $d[10] && ($s2 % 11) % 10 === $d[11];
+}
+
+/** Any date the checkout can produce -> YYYY-mm-dd, or null. */
+function leybo_raketa_date($raw) {
+    $raw = trim((string)$raw);
+    if ($raw === '') { return null; }
+    foreach (['Y-m-d', 'd.m.Y', 'd/m/Y', 'm/d/Y'] as $fmt) {
+        $dt = DateTime::createFromFormat($fmt, $raw);
+        if ($dt && $dt->format($fmt) === $raw) { return $dt->format('Y-m-d'); }
+    }
+    $ts = strtotime($raw);
+    return $ts ? gmdate('Y-m-d', $ts) : null;
+}
+
+/**
+ * title_russian accepts Cyrillic only - no digits, no Latin. So the declared name
+ * is a generic category, and everything identifying (article, size) rides in
+ * title_chinese, which is the field the China warehouse actually checks against.
+ */
+function leybo_raketa_ru_title($product) {
+    $map = apply_filters('leybo_raketa_ru_titles', ['default' => 'Кроссовки']);
+    return $map['default'];
+}
+
+/* ------------------------------------------------------- product resolution */
+
+/**
+ * Fresh spuId / Latin name / CNY price for the articles in an order.
+ * Falls back to the _leybo_cny meta written by the price sync when the API is
+ * unreachable, so a collector outage never blocks a declaration.
+ */
+function leybo_raketa_lookup($articles) {
+    $articles = array_values(array_unique(array_filter($articles)));
+    if (!$articles) { return []; }
+
+    $out = [];
+    $key = get_option('leybo_api_key', '');
+    if ($key) {
+        $res = wp_remote_get(
+            LEYBO_RAKETA_LOOKUP . '?articles=' . rawurlencode(implode(',', $articles)),
+            ['timeout' => 20, 'headers' => ['x-api-key' => $key]]
+        );
+        if (!is_wp_error($res) && wp_remote_retrieve_response_code($res) === 200) {
+            $body = json_decode(wp_remote_retrieve_body($res), true);
+            foreach ((array)($body['found'] ?? []) as $f) {
+                $out[strtoupper($f['article'])] = [
+                    'spu'  => (string)($f['spu'] ?? ''),
+                    'name' => (string)($f['name'] ?? ''),
+                    'cny'  => (float)($f['price_cny'] ?? 0),
+                ];
+            }
+        }
+    }
+    return $out;
+}
+
+/* ---------------------------------------------------------- payload builder */
+
+/** The product line of the declaration for one order item. */
+function leybo_raketa_item_payload($item, $live) {
+    $product = $item->get_product();
+    if (!$product) { return null; }
+
+    $pid     = $product->get_parent_id() ?: $product->get_id();
+    $article = strtoupper((string)get_post_meta($pid, '_leybo_article', true));
+    $info    = $live[$article] ?? [];
+
+    $cny = (float)($info['cny'] ?? 0);
+    if (!$cny) { $cny = (float)get_post_meta($pid, '_leybo_cny', true); }
+
+    // The size is the one thing the warehouse can physically mis-pick, so it goes
+    // into the Latin title that China checks the parcel against.
+    $size = '';
+    foreach ($item->get_meta_data() as $m) {
+        $d = $m->get_data();
+        if (stripos((string)$d['key'], 'razmer') !== false || stripos((string)$d['key'], 'разм') !== false) {
+            $size = trim(wp_strip_all_tags((string)$d['value']));
+        }
+    }
+
+    $latin = get_post_meta($pid, '_leybo_latin', true);
+    // Not get_the_title(): it runs wptexturize, and the curly quotes it produces
+    // survive the strip below as stray digits ("&#8216;" -> "8216"), which would
+    // land in a customs declaration as nonsense.
+    if (!$latin) { $latin = html_entity_decode((string)get_post_field('post_title', $pid), ENT_QUOTES, 'UTF-8'); }
+    $latin = preg_replace('/[^A-Za-z0-9 .\-\/]+/u', ' ', $latin);
+    $latin = trim(preg_replace('/\s+/', ' ', $latin . ' ' . $article . ($size ? ' EU ' . $size : '')));
+
+    $spu  = (string)($info['spu'] ?? get_post_meta($pid, '_leybo_spu', true));
+    $link = $spu ? sprintf(LEYBO_RAKETA_PRODUCT, $spu) : get_permalink($pid);
+
+    return [
+        '_article'      => $article,
+        '_product_id'   => $pid,
+        'link'          => mb_substr($link, 0, 255),
+        'title_russian' => leybo_raketa_ru_title($product),
+        'title_chinese' => mb_substr($latin, 0, 120),
+        'quantity'      => (int)$item->get_quantity(),
+        'price_cny'     => round($cny, 2),
+    ];
+}
+
+/** The whole NewOrderDTO, minus the track number which is filled in at send time. */
+function leybo_raketa_build($order) {
+    if (is_numeric($order)) { $order = wc_get_order($order); }
+    if (!$order) { return [null, ['Заказ не найден']]; }
+
+    $issues = [];
+    $g = function ($k) use ($order) { return trim((string)$order->get_meta('_' . $k, true)); };
+
+    $fio_raw = $order->get_billing_first_name() ?: $g('billing_first_name');
+    $fio     = leybo_raketa_split_fio($fio_raw);
+    if (!$fio) { $issues[] = 'ФИО: нужно минимум «Фамилия Имя» кириллицей, сейчас «' . $fio_raw . '»'; }
+
+    $pass = leybo_raketa_split_passport($order->get_meta('_billing_passport', true));
+    if (!$pass) { $issues[] = 'Паспорт: нужно ровно 10 цифр (серия 4 + номер 6)'; }
+
+    $issue_date = leybo_raketa_date($order->get_meta('_billing_date_pass', true));
+    if (!$issue_date) { $issues[] = 'Дата выдачи паспорта не распознана'; }
+
+    $birth = leybo_raketa_date($order->get_meta('_billing_birth_date', true));
+    if (!$birth) { $issues[] = 'Дата рождения не заполнена'; }
+
+    $inn = preg_replace('/\D+/', '', (string)$order->get_meta('_billing_inn', true));
+    if (!leybo_raketa_valid_inn($inn)) { $issues[] = 'ИНН: нужно 12 цифр с верной контрольной суммой'; }
+
+    $phone = leybo_raketa_phone($order->get_billing_phone());
+    if (!$phone) { $issues[] = 'Телефон: не свёлся к 10 цифрам'; }
+
+    $email = $order->get_billing_email();
+    if (!is_email($email)) { $issues[] = 'Email не похож на почту'; }
+
+    $city = $order->get_shipping_city() ?: $order->get_billing_city();
+    if (!$city) { $issues[] = 'Не указан город доставки'; }
+
+    $company = leybo_raketa_opt('company', 'СДЭК');
+    $tariff  = leybo_raketa_opt('tariff', 'Посылка склад-склад');
+    $method  = leybo_raketa_opt('receive', 'pvz');
+
+    $address = [
+        'title'            => trim($company . ' ' . $city),
+        'city'             => $city,
+        'shipping_company' => $company,
+        'receive_method'   => $method,
+        'tariff'           => $tariff,
+    ];
+    $region = $order->get_shipping_state() ?: $order->get_billing_state();
+    if ($region) { $address['region'] = $region; }
+
+    if ($method === 'pvz') {
+        $pvz = trim((string)$order->get_meta('_billing_cdek_pvz', true));
+        if (!$pvz) { $issues[] = 'Не выбран ПВЗ ' . $company; }
+        $address['pvz_info'] = ['code' => $pvz];
+    } else {
+        $kd = ['address' => $order->get_shipping_address_1() ?: $order->get_billing_address_1()];
+        foreach (['house_number' => '_kd_house', 'entrance_number' => '_kd_entrance',
+                  'intercom_code' => '_kd_intercom', 'floor_number' => '_kd_floor',
+                  'apartment_number' => '_kd_flat'] as $api => $meta) {
+            $v = (int)$order->get_meta($meta, true);
+            if ($v > 0) { $kd[$api] = $v; }
+        }
+        foreach (['house_number', 'entrance_number', 'intercom_code', 'floor_number'] as $need) {
+            if (empty($kd[$need])) { $issues[] = 'Курьерская доставка: не заполнено ' . $need; }
+        }
+        $address['kd_info'] = $kd;
+    }
+
+    $arts = [];
+    foreach ($order->get_items() as $item) {
+        $p = $item->get_product();
+        if ($p) { $arts[] = strtoupper((string)get_post_meta($p->get_parent_id() ?: $p->get_id(), '_leybo_article', true)); }
+    }
+    $live = leybo_raketa_lookup($arts);
+
+    $products = [];
+    foreach ($order->get_items() as $item) {
+        $line = leybo_raketa_item_payload($item, $live);
+        if (!$line) { continue; }
+        if (!$line['_article']) {
+            $issues[] = 'Товар «' . $item->get_name() . '» не привязан к артикулу (_leybo_article)';
+        }
+        if ($line['price_cny'] <= 0) {
+            $issues[] = 'Нет закупочной цены ¥ для «' . $item->get_name() . '»';
+        }
+        unset($line['_article'], $line['_product_id']);
+        $products[] = $line;
+    }
+    if (!$products) { $issues[] = 'В заказе нет товаров'; }
+
+    $payload = [
+        'title'     => 'LEYBO-' . $order->get_id(),
+        'products'  => $products,
+        'declarant' => [
+            'first_name'          => $fio['first_name'] ?? '',
+            'middle_name'         => $fio['middle_name'] ?? '',
+            'last_name'           => $fio['last_name'] ?? '',
+            'birth_date'          => $birth,
+            'passport_series'     => $pass[0] ?? '',
+            'passport_number'     => $pass[1] ?? '',
+            'passport_issue_date' => $issue_date,
+            'inn'                 => $inn,
+            'phone_number'        => $phone,
+            'email'               => $email,
+        ],
+        'recipient' => [
+            'first_name'   => $fio['first_name'] ?? '',
+            'middle_name'  => $fio['middle_name'] ?? '',
+            'last_name'    => $fio['last_name'] ?? '',
+            'phone_number' => $phone,
+        ],
+        'address'   => $address,
+    ];
+
+    $services = (array)json_decode((string)leybo_raketa_opt('services', '[]'), true);
+    if ($services) { $payload['additional_services'] = array_values($services); }
+
+    if ($payload['declarant']['middle_name'] === '') { unset($payload['declarant']['middle_name']); }
+    if ($payload['recipient']['middle_name'] === '') { unset($payload['recipient']['middle_name']); }
+
+    return [$payload, $issues];
+}
+
+/* ----------------------------------------------------------- Raketa client */
+
+function leybo_raketa_call($method, $path, $args = [], $body = null) {
+    $token = leybo_raketa_opt('token', '');
+    if (!$token) { return new WP_Error('no_token', 'Токен RaketaAPI не задан'); }
+
+    $scheme = leybo_raketa_opt('auth', 'bearer');
+    $url = rtrim(leybo_raketa_opt('base', LEYBO_RAKETA_BASE), '/') . $path;
+    if ($args) { $url .= '?' . http_build_query($args); }
+
+    $req = [
+        'method'  => $method,
+        'timeout' => 45,
+        'headers' => [
+            'authorization' => $scheme === 'raw' ? $token : 'Bearer ' . $token,
+            'accept'        => 'application/json',
+        ],
+    ];
+    if ($body !== null) {
+        $req['headers']['content-type'] = 'application/json';
+        $req['body'] = wp_json_encode($body, JSON_UNESCAPED_UNICODE);
+    }
+
+    $res = wp_remote_request($url, $req);
+    if (is_wp_error($res)) { return $res; }
+
+    $code = wp_remote_retrieve_response_code($res);
+    $raw  = wp_remote_retrieve_body($res);
+    $json = json_decode($raw, true);
+
+    if ($code >= 400) {
+        // A 422 body lists exactly which field Raketa refused - keep it readable.
+        $msg = 'HTTP ' . $code;
+        if (isset($json['detail']) && is_array($json['detail'])) {
+            $bits = [];
+            foreach ($json['detail'] as $d) {
+                $bits[] = implode('.', (array)($d['loc'] ?? [])) . ': ' . ($d['msg'] ?? '');
+            }
+            $msg .= ' — ' . implode('; ', $bits);
+        } elseif ($raw) {
+            $msg .= ' — ' . mb_substr(wp_strip_all_tags($raw), 0, 400);
+        }
+        return new WP_Error('raketa_http', $msg, ['code' => $code, 'body' => $json ?: $raw]);
+    }
+    return $json === null ? [] : $json;
+}
+
+/* -------------------------------------------------------------- order flow */
+
+function leybo_raketa_log($order, $text) {
+    $log = (array)$order->get_meta('_raketa_log', true);
+    $log[] = ['t' => time(), 'm' => (string)$text];
+    $order->update_meta_data('_raketa_log', array_slice($log, -40));
+    $order->save();
+}
+
+/** Re-run validation and park the order in the right state. */
+function leybo_raketa_refresh($order_id) {
+    $order = wc_get_order($order_id);
+    if (!$order) { return; }
+
+    list($payload, $issues) = leybo_raketa_build($order);
+    $order->update_meta_data('_raketa_issues', $issues);
+    if ($issues) {
+        $order->update_meta_data('_raketa_state', 'blocked');
+    } elseif (!$order->get_meta('_raketa_ra_track', true)) {
+        $order->update_meta_data('_raketa_state', 'waiting_track');
+    }
+    $order->save();
+    return [$payload, $issues];
+}
+
+add_action('woocommerce_checkout_order_processed', 'leybo_raketa_on_new_order', 20, 1);
+function leybo_raketa_on_new_order($order_id) {
+    list(, $issues) = leybo_raketa_refresh($order_id);
+    $order = wc_get_order($order_id);
+    if ($order) {
+        leybo_raketa_log($order, $issues
+            ? 'Заявка не готова: ' . implode(' | ', $issues)
+            : 'Заявка собрана и провалидирована, ждём китайский трек');
+    }
+}
+
+/**
+ * The single door for a Chinese track number. Everything that can supply one -
+ * the order screen, the bulk paste, the REST hook - goes through here, so the
+ * send fires exactly once and from one place.
+ */
+function leybo_raketa_set_track($order_id, $track) {
+    $order = wc_get_order($order_id);
+    if (!$order) { return new WP_Error('no_order', 'Заказ не найден'); }
+
+    $track = strtoupper(preg_replace('/\s+/', '', (string)$track));
+    if (strlen($track) < 9) { return new WP_Error('short', 'Трек короче 9 символов'); }
+    if ($order->get_meta('_raketa_ra_track', true)) { return new WP_Error('done', 'Заказ уже заведён в Ракете'); }
+
+    $order->update_meta_data('_raketa_cn_track', $track);
+    $order->update_meta_data('_raketa_state', 'sending');
+    $order->update_meta_data('_raketa_attempts', 0);
+    $order->save();
+    leybo_raketa_log($order, 'Получен китайский трек ' . $track . ' — отправляю в Ракету');
+
+    if (function_exists('as_enqueue_async_action')) {
+        as_enqueue_async_action('leybo_raketa_send', [(int)$order_id], 'leybo');
+    } else {
+        leybo_raketa_send($order_id);
+    }
+    return true;
+}
+
+add_action('leybo_raketa_send', 'leybo_raketa_send', 10, 1);
+function leybo_raketa_send($order_id) {
+    $order = wc_get_order($order_id);
+    if (!$order || $order->get_meta('_raketa_ra_track', true)) { return; }
+
+    $track = (string)$order->get_meta('_raketa_cn_track', true);
+    if (strlen($track) < 9) { return; }
+
+    list($payload, $issues) = leybo_raketa_build($order);
+    if ($issues) {
+        $order->update_meta_data('_raketa_state', 'blocked');
+        $order->update_meta_data('_raketa_issues', $issues);
+        $order->save();
+        leybo_raketa_log($order, 'Отправка отменена: ' . implode(' | ', $issues));
+        return;
+    }
+    $payload['track_number'] = $track;
+
+    if (leybo_raketa_opt('dry', '1') === '1') {
+        $order->update_meta_data('_raketa_state', 'dry');
+        $order->save();
+        leybo_raketa_log($order, 'РЕЖИМ ЗАГЛУШКИ, ничего не отправлено. Payload: '
+            . wp_json_encode($payload, JSON_UNESCAPED_UNICODE));
+        return;
+    }
+
+    $res = leybo_raketa_call('POST', '/v1/order', [], $payload);
+
+    if (is_wp_error($res)) {
+        $n = (int)$order->get_meta('_raketa_attempts', true) + 1;
+        $order->update_meta_data('_raketa_attempts', $n);
+        $order->update_meta_data('_raketa_state', 'error');
+        $order->save();
+        leybo_raketa_log($order, 'Ошибка отправки (' . $n . '): ' . $res->get_error_message());
+
+        // Network and 5xx blips are worth retrying; a 422 is our own bad data and
+        // will fail identically forever, so it waits for a human.
+        $code = (int)(($res->get_error_data()['code'] ?? 0));
+        if ($n < 5 && ($code === 0 || $code >= 500) && function_exists('as_schedule_single_action')) {
+            as_schedule_single_action(time() + 600 * $n, 'leybo_raketa_send', [(int)$order_id], 'leybo');
+        }
+        return;
+    }
+
+    $ra = '';
+    if (isset($res['order']['track_number'])) { $ra = (string)$res['order']['track_number']; }
+    if (!$ra && isset($res['track_number']))  { $ra = (string)$res['track_number']; }
+    if (!$ra) {
+        // Their doc and their running service disagree on the response envelope,
+        // so dig the RA number out of whatever came back rather than trusting one.
+        $flat = wp_json_encode($res, JSON_UNESCAPED_UNICODE);
+        if (preg_match('/RA\d{6,}/', (string)$flat, $m)) { $ra = $m[0]; }
+    }
+
+    $order->update_meta_data('_raketa_ra_track', $ra);
+    $order->update_meta_data('_raketa_state', $ra ? 'sent' : 'error');
+    $order->update_meta_data('_raketa_response', $res);
+    $order->save();
+
+    $details = isset($res['details']) ? ' Ответ: ' . wp_json_encode($res['details'], JSON_UNESCAPED_UNICODE) : '';
+    leybo_raketa_log($order, $ra ? 'Заведено в Ракете: ' . $ra . $details
+                                 : 'Ракета ответила без трека.' . $details);
+    if ($ra) { $order->add_order_note('Ракета: заказ создан, трек ' . $ra, false); }
+}
+
+/* ------------------------------------------------------------ track polling */
+
+add_action('leybo_raketa_track_event', 'leybo_raketa_poll');
+function leybo_raketa_poll() {
+    $orders = wc_get_orders([
+        'limit'      => 60,
+        'meta_key'   => '_raketa_state',
+        'meta_value' => 'sent',
+        'orderby'    => 'modified',
+        'order'      => 'ASC',
+    ]);
+    foreach ($orders as $order) {
+        $ra = (string)$order->get_meta('_raketa_ra_track', true);
+        if (!$ra) { continue; }
+
+        $res = leybo_raketa_call('GET', '/v1/order/track', ['track_number' => $ra, 'last_stage' => 'true']);
+        if (is_wp_error($res) || !is_array($res) || !$res) { continue; }
+
+        $stage = (string)($res[0]['title'] ?? '');
+        if ($stage && $stage !== (string)$order->get_meta('_raketa_last_stage', true)) {
+            $order->update_meta_data('_raketa_last_stage', $stage);
+            $order->save();
+            $order->add_order_note('Ракета: ' . $stage, false);
+        }
+    }
+}
+
+/* ---------------------------------------------------------- checkout fields */
+
+/**
+ * Raketa needs a birth date and an INN that the shop never asked for, plus the
+ * pickup-point code. They are written into the same option the field editor plugin
+ * owns, so they show up in its UI instead of fighting it.
+ */
+function leybo_raketa_install_fields() {
+    $b = (array)get_option('wc_fields_billing', []);
+    $add = [
+        'billing_birth_date' => [
+            'type' => 'date', 'label' => 'Дата рождения', 'priority' => 105,
+            'class' => ['form-row-wide'],
+        ],
+        'billing_inn' => [
+            'type' => 'text', 'label' => 'ИНН (12 цифр)', 'priority' => 115,
+            'class' => ['form-row-wide'], 'placeholder' => '123456789012',
+        ],
+        'billing_cdek_pvz' => [
+            'type' => 'text', 'label' => 'Код ПВЗ СДЭК', 'priority' => 130,
+            'class' => ['form-row-wide'], 'placeholder' => 'например MSK622',
+        ],
+    ];
+    $changed = false;
+    foreach ($add as $name => $cfg) {
+        if (isset($b[$name])) { continue; }
+        $b[$name] = array_merge([
+            'name' => $name, 'default' => '', 'placeholder' => '', 'validate' => '',
+            'title_type' => '', 'required' => 1, 'checked' => 0, 'enabled' => 1,
+            'show_in_email' => 1, 'show_in_order' => 1, 'options' => '',
+            'autocomplete' => '', 'custom' => 1,
+        ], $cfg);
+        $changed = true;
+    }
+    if ($changed) { update_option('wc_fields_billing', $b); }
+}
+
+/**
+ * Reject bad declarant data while the customer is still on the page. Far kinder
+ * than accepting the order and discovering at customs that the passport was typed
+ * with nine digits.
+ */
+add_action('woocommerce_after_checkout_validation', 'leybo_raketa_validate_checkout', 10, 2);
+function leybo_raketa_validate_checkout($data, $errors) {
+    if (!leybo_raketa_split_fio($data['billing_first_name'] ?? '')) {
+        $errors->add('billing_first_name', 'Укажите ФИО кириллицей: Фамилия Имя Отчество.');
+    }
+    if (isset($_POST['billing_passport']) && !leybo_raketa_split_passport($_POST['billing_passport'])) {
+        $errors->add('billing_passport', 'Серия и номер паспорта — ровно 10 цифр.');
+    }
+    if (isset($_POST['billing_inn']) && !leybo_raketa_valid_inn($_POST['billing_inn'])) {
+        $errors->add('billing_inn', 'ИНН указан неверно — проверьте 12 цифр.');
+    }
+    if (isset($_POST['billing_birth_date']) && !leybo_raketa_date($_POST['billing_birth_date'])) {
+        $errors->add('billing_birth_date', 'Укажите дату рождения.');
+    }
+}
+
+/* --------------------------------------------------------------- REST hook */
+
+/**
+ * Lets whatever ends up doing the Poizon buying push a track in without a browser:
+ *   POST /wp-json/leybo/v1/track  {"order_id":123,"track":"YT7600..."}
+ */
+add_action('rest_api_init', function () {
+    register_rest_route('leybo/v1', '/track', [
+        'methods'             => 'POST',
+        'permission_callback' => function ($req) {
+            $key = (string)leybo_raketa_opt('push_key', '');
+            return $key && hash_equals($key, (string)$req->get_header('x-leybo-key'));
+        },
+        'callback' => function ($req) {
+            $r = leybo_raketa_set_track((int)$req['order_id'], (string)$req['track']);
+            if (is_wp_error($r)) { return new WP_REST_Response(['error' => $r->get_error_message()], 400); }
+            return ['ok' => true];
+        },
+    ]);
+});
+
+/* -------------------------------------------------------------- admin: order */
+
+add_action('add_meta_boxes', function () {
+    add_meta_box('leybo_raketa', 'Ракета — логистика', 'leybo_raketa_box', 'shop_order', 'side', 'high');
+});
+
+function leybo_raketa_box($post) {
+    $order = wc_get_order($post->ID);
+    if (!$order) { return; }
+
+    $state  = (string)$order->get_meta('_raketa_state', true);
+    $issues = (array)$order->get_meta('_raketa_issues', true);
+    $cn     = (string)$order->get_meta('_raketa_cn_track', true);
+    $ra     = (string)$order->get_meta('_raketa_ra_track', true);
+
+    $labels = [
+        'blocked'       => ['Не хватает данных', '#b32d2e'],
+        'waiting_track' => ['Ждём китайский трек', '#996800'],
+        'sending'       => ['Отправляется…', '#996800'],
+        'dry'           => ['Заглушка (не отправлено)', '#646970'],
+        'sent'          => ['Заведено в Ракете', '#00733c'],
+        'error'         => ['Ошибка', '#b32d2e'],
+    ];
+    list($text, $colour) = $labels[$state] ?? ['Не собрано', '#646970'];
+
+    echo '<p style="margin:0 0 8px"><strong style="color:' . esc_attr($colour) . '">' . esc_html($text) . '</strong></p>';
+
+    if ($issues) {
+        echo '<ul style="margin:0 0 10px;padding-left:16px;color:#b32d2e;font-size:12px">';
+        foreach ($issues as $i) { echo '<li>' . esc_html($i) . '</li>'; }
+        echo '</ul>';
+    }
+    if ($ra) {
+        echo '<p style="margin:0 0 8px">RA-трек: <code>' . esc_html($ra) . '</code><br>';
+        echo 'Этап: ' . esc_html($order->get_meta('_raketa_last_stage', true) ?: '—') . '</p>';
+    } else {
+        wp_nonce_field('leybo_raketa_track', 'leybo_raketa_nonce');
+        echo '<label style="display:block;font-size:12px;margin-bottom:4px">Китайский трек</label>';
+        echo '<input type="text" name="leybo_raketa_cn" value="' . esc_attr($cn) . '" style="width:100%" placeholder="от 9 символов">';
+        echo '<p style="font-size:11px;color:#646970;margin:6px 0 0">Сохраните заказ — заявка уйдёт в Ракету сама.</p>';
+    }
+
+    $log = array_reverse((array)$order->get_meta('_raketa_log', true));
+    if ($log) {
+        echo '<details style="margin-top:10px"><summary style="cursor:pointer;font-size:12px">Журнал</summary><div style="font-size:11px;max-height:220px;overflow:auto">';
+        foreach (array_slice($log, 0, 15) as $l) {
+            echo '<p style="margin:6px 0"><span style="color:#646970">'
+               . esc_html(date_i18n('d.m H:i', $l['t'])) . '</span><br>' . esc_html(mb_substr($l['m'], 0, 400)) . '</p>';
+        }
+        echo '</div></details>';
+    }
+}
+
+add_action('save_post_shop_order', 'leybo_raketa_save_box', 20, 1);
+function leybo_raketa_save_box($post_id) {
+    if (!isset($_POST['leybo_raketa_nonce']) || !wp_verify_nonce($_POST['leybo_raketa_nonce'], 'leybo_raketa_track')) { return; }
+    if (!current_user_can('edit_shop_orders')) { return; }
+    $cn = trim((string)($_POST['leybo_raketa_cn'] ?? ''));
+    if ($cn !== '') { leybo_raketa_set_track($post_id, $cn); }
+}
+
+/* ----------------------------------------------------------- admin: settings */
+
+add_action('admin_menu', function () {
+    add_submenu_page('woocommerce', 'Ракета', 'Ракета', 'manage_woocommerce', 'leybo-raketa', 'leybo_raketa_page');
+});
+
+function leybo_raketa_page() {
+    if (!current_user_can('manage_woocommerce')) { return; }
+
+    if (isset($_POST['leybo_raketa_save']) && check_admin_referer('leybo_raketa_opts')) {
+        foreach (['token', 'base', 'auth', 'company', 'tariff', 'receive', 'services', 'dry'] as $k) {
+            if (isset($_POST['r_' . $k])) {
+                update_option('leybo_raketa_' . $k, sanitize_text_field(wp_unslash($_POST['r_' . $k])));
+            }
+        }
+        leybo_raketa_install_fields();
+        echo '<div class="notice notice-success"><p>Сохранено.</p></div>';
+    }
+
+    if (isset($_POST['leybo_raketa_bulk']) && check_admin_referer('leybo_raketa_opts')) {
+        $done = 0; $fail = [];
+        foreach (preg_split('/\R/', (string)wp_unslash($_POST['bulk'])) as $line) {
+            if (!preg_match('/(\d+)\s*[;,\t| ]\s*(\S{9,})/', trim($line), $m)) { continue; }
+            $r = leybo_raketa_set_track((int)$m[1], $m[2]);
+            if (is_wp_error($r)) { $fail[] = $m[1] . ': ' . $r->get_error_message(); } else { $done++; }
+        }
+        echo '<div class="notice notice-' . ($fail ? 'warning' : 'success') . '"><p>Принято треков: ' . $done
+           . ($fail ? '<br>Не вышло: ' . esc_html(implode('; ', $fail)) : '') . '</p></div>';
+    }
+
+    $carriers = leybo_raketa_carriers();
+    $company  = leybo_raketa_opt('company', 'СДЭК');
+    ?>
+    <div class="wrap">
+        <h1>Ракета — логистика</h1>
+        <?php if (leybo_raketa_opt('dry', '1') === '1') : ?>
+            <div class="notice notice-warning inline"><p><strong>Режим заглушки.</strong>
+            Заявки собираются и валидируются, но в Ракету не уходят. Снимите галочку, когда появится токен.</p></div>
+        <?php endif; ?>
+
+        <form method="post"><?php wp_nonce_field('leybo_raketa_opts'); ?>
+        <table class="form-table">
+            <tr><th>Токен</th><td>
+                <input type="password" name="r_token" value="<?php echo esc_attr(leybo_raketa_opt('token')); ?>" class="regular-text" autocomplete="off">
+                <p class="description">Хранится в опциях WP, в заметки не выносится.</p></td></tr>
+            <tr><th>Заголовок авторизации</th><td>
+                <select name="r_auth">
+                    <?php foreach (['bearer' => 'Authorization: Bearer <токен>', 'raw' => 'Authorization: <токен>'] as $k => $v) :
+                        printf('<option value="%s"%s>%s</option>', $k, selected(leybo_raketa_opt('auth', 'bearer'), $k, false), esc_html($v));
+                    endforeach; ?>
+                </select>
+                <p class="description">В их спеке поле названо X-Api-Key, а описано как Bearer — если получите 401, переключите.</p></td></tr>
+            <tr><th>База API</th><td><input type="text" name="r_base" value="<?php echo esc_attr(leybo_raketa_opt('base', LEYBO_RAKETA_BASE)); ?>" class="regular-text"></td></tr>
+            <tr><th>Перевозчик</th><td>
+                <select name="r_company"><?php foreach (array_keys($carriers) as $c) {
+                    printf('<option value="%s"%s>%s</option>', esc_attr($c), selected($company, $c, false), esc_html($c)); } ?></select></td></tr>
+            <tr><th>Тариф</th><td>
+                <select name="r_tariff"><?php foreach ($carriers as $c => $ts) { foreach ($ts as $t) {
+                    printf('<option value="%s"%s>%s — %s</option>', esc_attr($t), selected(leybo_raketa_opt('tariff', 'Посылка склад-склад'), $t, false), esc_html($c), esc_html($t)); } } ?></select>
+                <p class="description">Строки должны совпадать с Ракетой символ в символ.</p></td></tr>
+            <tr><th>Способ получения</th><td>
+                <select name="r_receive"><?php foreach (['pvz' => 'ПВЗ', 'kd' => 'Курьером'] as $k => $v) {
+                    printf('<option value="%s"%s>%s</option>', $k, selected(leybo_raketa_opt('receive', 'pvz'), $k, false), esc_html($v)); } ?></select></td></tr>
+            <tr><th>Доп. услуги</th><td>
+                <input type="text" name="r_services" value="<?php echo esc_attr(leybo_raketa_opt('services', '[]')); ?>" class="regular-text">
+                <p class="description">JSON-массив. Доступно: insurance, branding, box_package, lathing_package.</p></td></tr>
+            <tr><th>Режим заглушки</th><td>
+                <label><input type="checkbox" name="r_dry" value="1" <?php checked(leybo_raketa_opt('dry', '1'), '1'); ?>>
+                не отправлять в Ракету, только собирать и логировать</label></td></tr>
+        </table>
+        <p><button class="button button-primary" name="leybo_raketa_save" value="1">Сохранить</button></p>
+
+        <h2>Массовая вставка треков</h2>
+        <p class="description">По строке на заказ: <code>номер_заказа трек</code>. Разделитель — пробел, запятая, точка с запятой или таб.</p>
+        <textarea name="bulk" rows="8" style="width:100%;font-family:monospace" placeholder="1024 YT7600123456789&#10;1025 SF1234567890"></textarea>
+        <p><button class="button" name="leybo_raketa_bulk" value="1">Отправить в Ракету</button></p>
+        </form>
+
+        <h2>REST-ручка</h2>
+        <p><code>POST <?php echo esc_html(rest_url('leybo/v1/track')); ?></code> с заголовком
+           <code>x-leybo-key</code> и телом <code>{"order_id":123,"track":"YT76..."}</code><br>
+           Ключ: <code><?php echo esc_html(leybo_raketa_opt('push_key')); ?></code></p>
+    </div>
+    <?php
+}
+
+/* --------------------------------------------------------------- bootstrap */
+
+add_action('init', function () {
+    if (!leybo_raketa_opt('push_key')) {
+        update_option('leybo_raketa_push_key', wp_generate_password(32, false));
+    }
+    if (!get_option('leybo_raketa_fields_done')) {
+        leybo_raketa_install_fields();
+        update_option('leybo_raketa_fields_done', 1);
+    }
+    if (!wp_next_scheduled('leybo_raketa_track_event')) {
+        wp_schedule_event(time() + 300, 'hourly', 'leybo_raketa_track_event');
+    }
+});

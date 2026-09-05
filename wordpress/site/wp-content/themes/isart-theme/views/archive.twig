@@ -1,0 +1,30 @@
+{% include "partials/header.twig" %}
+<main class='main-content blog_page pt-prime pb-prime' id="app">
+	<div class="container">
+		<div class="breadcrumbs_block">
+			{{ breadcrumbs }}
+		</div>
+		<h1 class="h1 page_title m-0">{{ title }}</h1>
+		<div class="blog_content">
+			<div class="blog_list d-grid col-3 gap-2 ajax_pagination">
+				{% for post in posts %}
+					<a href="{{ post.link }}" class="blog-item d-flex flex-column ajax_item">
+						<div class="blog-item-image">
+							{% if post.thumbnail %}
+								<img class="w-100 h-100 object-cover-50" src="{{ post.thumbnail.src }}" alt="">
+							{% else %}
+								<img class="w-100 h-100 object-cover-50" src="{{ site.link }}/wp-content/uploads/woocommerce-placeholder.png" alt="">
+							{% endif %}
+						</div>
+						<div class="blog-item-info text-center">
+							<h4 class="blog-item_name nunito m-0">{{ post.title }}</h4>
+							<div class="blog-item-excerpt">{{ post.preview.length(10).read_more('') }}</div>
+						</div>
+					</a>
+				{% endfor %}
+			</div>
+			{% include "partials/pagination.twig"  with { pagination: posts.pagination({show_all: false, mid_size: 1, end_size: 2}) } %}
+		</div>
+	</div>
+</main>
+{% include "partials/footer.twig" %}

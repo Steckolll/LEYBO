@@ -1,0 +1,48 @@
+{{ fn('timber_set_product', post) }}
+<a href="{{ link }}" class="product-card ajax_item">
+	{# <object>
+		{{ function('do_shortcode','[yith_wcwl_add_to_wishlist]') }}
+	</object> #}
+	<div class="product-image position-relative">
+		{% if thumb %}
+			<img class="w-100 h-100 object-cover-50" src="{{ thumb }}" alt="">
+		{% else %}
+			<img class="w-100 h-100 object-cover-50" src="{{ sitelink }}/wp-content/uploads/woocommerce-placeholder.png" alt="">
+		{% endif %}
+		<div class="product-card-bottom position-absolute">
+			<div class="tags_list d-flex">
+				{% if newest %}
+					<div class="prod_tag">New</div>
+				{% endif %}
+				{% if hit %}
+					<div class="prod_tag">Hit</div>
+				{% endif %}
+			</div>
+			{% if prod_type == "variable" %}
+				<div class="btn btn_buy button add_to_cart_button ajax_add_to_cart d-flex align-items-center justify-content-center w-100">Посмотреть</div>
+			{% else %}
+				<object>
+					<a href="?add-to-cart='{{ id }}'" data-quantity="1" data-product_id="{{ id }}" class="btn btn_buy button add_to_cart_button ajax_add_to_cart d-flex align-items-center justify-content-center w-100"><div></div></a>
+				</object>
+			{% endif %}
+		</div>
+
+	</div>
+	<div
+		class="product-info">
+		{# <pre style="text-align: left">{{ dump(post.product) }}</pre> #}
+		<div class="product-prices text-center">
+			<div class="current-price nunito">
+				{% if prod_type == "variable" and min_price < max_price %}
+					от
+					{{ min_price|number_format(0, '.', ' ') }}
+					₽
+				{% else %}
+					{{ price|number_format(0, '.', ' ') }}
+					₽
+				{% endif %}
+			</div>
+		</div>
+		<h2 class="product-card-name text-center m-0">{{ title }}</h2>
+	</div>
+</a>

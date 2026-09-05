@@ -1,0 +1,73 @@
+{
+  "name": "wordpress-twig-template",
+  "version": "2.5.0",
+  "main": "gulpfile.js",
+  "scripts": {
+    "serve": "webpack-dev-server --config config/webpack.config.js --open",
+    "dev": "webpack --watch --config config/webpack.config.js",
+    "test": "jest"
+  },
+  "author": "Eroshkin A",
+  "license": "ISC",
+  "dependencies": {
+    "babel-loader": "^7.1.5",
+    "babel-plugin-module-resolver": "^3.2.0",
+    "browser-sync-webpack-plugin": "^2.2.2",
+    "crypto-js": "^3.1.9-1",
+    "draggable-vue-directive": "^2.0.6",
+    "extract-text-webpack-plugin": "^3.0.2",
+    "gulp-autoprefixer": "^6.1.0",
+    "gulp-load-plugins": "^1.6.0",
+    "lozad": "^1.9.0",
+    "numeral": "^2.0.6",
+    "oauth": "^0.9.15",
+    "typed.js": "^2.0.12",
+    "vue": "",
+    "vue-drag-drop": "^1.1.4",
+    "vue-lazyload": "^1.3.3",
+    "vue-masked-input": "^0.5.2",
+    "vuejs-paginate": "^2.1.0",
+    "vuelidate": "^0.7.4",
+    "vuex": "^3.1.0",
+    "vuex-persistedstate": "^2.5.4"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.0.0",
+    "@babel/core": "^7.6.2",
+    "@babel/plugin-transform-spread": "^7.6.2",
+    "@babel/preset-env": "^7.13.12",
+    "@vue/test-utils": "^1.0.0-beta.29",
+    "babel-cli": "",
+    "babel-core": "^7.0.0-bridge.0",
+    "babel-jest": "^24.9.0",
+    "babel-loader": "",
+    "babel-polyfill": "",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-es2015": "",
+    "babel-preset-latest": "^6.24.1",
+    "browser-sync": "^2.26.3",
+    "css-loader": "^2.1.1",
+    "jest": "^24.9.0",
+    "regenerator-runtime": "^0.13.3",
+    "sass-loader": "^7.1.0",
+    "vue-jest": "^3.0.5",
+    "vue-loader": "^15.7.0",
+    "vue-style-loader": "^4.1.2",
+    "vue-template-compiler": "^2.6.10",
+    "webpack": "^3.11.0",
+    "webpack-bundle-analyzer": "^3.3.2",
+    "webpack-stream": "^4.0.1"
+  },
+  "description": "",
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "vue"
+    ],
+    "transform": {
+      "^.+\\.js$": "<rootDir>/node_modules/babel-jest",
+      ".*\\.(vue)$": "<rootDir>/node_modules/vue-jest"
+    }
+  }
+}
