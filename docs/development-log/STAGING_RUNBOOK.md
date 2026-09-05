@@ -76,6 +76,24 @@ docker compose up -d
 
 6. Выполнить smoke-проверку главной, `/shop/`, каталога, товара, `/cart/`, `/checkout/`, `/my-account/` и `/wp-admin/`.
 
+## Проверенная репетиция 2026-09-05
+
+Восстановление архива от 2026-08-27 выполнено безопасно в отдельную схему `leybo_restore` внутри MySQL-контейнера. Рабочая схема `leybo` не перезаписывалась. После импорта были применены localhost URL, обезличивание пользователей и очистка integration options; затем web временно запускался на `leybo_restore` и был возвращен на `leybo`.
+
+Перед подобной репетицией обязательно сделать дамп текущей staging-схемы вне репозитория с `--no-tablespaces`, если у пользователя базы нет `PROCESS` privilege:
+
+```powershell
+docker compose exec -T db mysqldump -uleybo -pleybo_pass --single-transaction --no-tablespaces --routines --triggers leybo | Set-Content -Encoding utf8 "C:\path\to\staging-rollback.sql"
+```
+
+Для отдельной схемы используется root только внутри локального контейнера:
+
+```powershell
+docker compose exec -T db mysql -uroot -prootpass -e "DROP DATABASE IF EXISTS leybo_restore; CREATE DATABASE leybo_restore CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_520_ci; GRANT ALL PRIVILEGES ON leybo_restore.* TO 'leybo'@'%'; FLUSH PRIVILEGES;"
+```
+
+После restore нужно вернуть `DB_NAME=leybo` в локальном `wp-config.php` и перезапустить только web-контейнер. Схему `leybo_restore` удалить после принятия результатов отдельным решением, а не автоматически.
+
 ## Обязательное правило
 
 Не запускать `docker compose down -v` без отдельного решения: команда удалит volume базы и локальное состояние. Перед разрушительными действиями нужен новый локальный backup volume/БД.
