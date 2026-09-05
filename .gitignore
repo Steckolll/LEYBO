@@ -27,6 +27,7 @@ wordpress/site/wp-includes/
 wordpress/site/wp-content/plugins/
 wordpress/site/wp-content/uploads/
 wordpress/site/wp-content/cache/
+wordpress/site/wp-content/updraft/
 wordpress/site/wp-content/upgrade/
 wordpress/site/wp-content/backup*/
 wordpress/site/wp-content/leybo-backups/
@@ -36,6 +37,7 @@ wordpress/wp-content/uploads/
 wordpress/wp-content/plugins/
 wordpress/wp-config.php
 wordpress/**/debug.log
+wordpress/site/wp-content/debug.log-*
 wordpress/site/wp-content/novamira-sandbox/leybo-temp-mcp-access.php
 wordpress/site/wp-content/novamira-sandbox/prices-before-*.json
 wordpress/site/wp-content/novamira-sandbox/wp-cli-jobs/

@@ -9,6 +9,11 @@
  */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
+// 0. Тише лог на стенде: Deprecated/Notice от старых плагинов (Timber/ACF)
+// писались тысячами строк на страницу и съедали минуты. Реальные ошибки
+// (Warning и выше) логируются как раньше.
+error_reporting( E_ALL & ~E_DEPRECATED & ~E_NOTICE & ~E_USER_DEPRECATED & ~E_USER_NOTICE );
+
 class Leybo_Isolation {
 	const LOG = 'leybo-isolation';
 
@@ -42,7 +47,21 @@ class Leybo_Isolation {
 			return array();
 		}, 1 );
 
-		// 5. Дублирующая защита от исходящей почты через Mailer не задаётся.
+		// 5. WordPress.org мокируется пустым ответом: сторонние плагины
+		// (XT Framework) не переживают WP_Error от блокировки и роняют
+		// админку фаталом на array_map(null). Пустой список — честный
+		// staging-ответ без единого исходящего запроса.
+		add_filter( 'plugins_api', function ( $result, $action ) {
+			if ( $action === 'query_plugins' ) {
+				return (object) array(
+					'info'    => array( 'page' => 1, 'pages' => 1, 'results' => 0 ),
+					'plugins' => array(),
+				);
+			}
+			return $result;
+		}, 99, 3 );
+
+		// 6. Дублирующая защита от исходящей почты через Mailer не задаётся.
 	}
 
 	private static function is_local_url( $url ) {

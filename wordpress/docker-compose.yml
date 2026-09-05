@@ -29,7 +29,8 @@ services:
       db:
         condition: service_healthy
     ports:
-      - "8081:80"
+      # Закрытый staging: доступ только с локальной машины, не из сети.
+      - "127.0.0.1:8081:80"
     volumes:
       - ../wordpress/site:/var/www/html
       - ./apache/000-default.conf:/etc/apache2/sites-available/000-default.conf:ro

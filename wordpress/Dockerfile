@@ -42,12 +42,17 @@ RUN { \
     } > /usr/local/etc/php/conf.d/wp.ini
 
 # Opcache
+# validate_timestamps=0: stat-проверки файлов через Windows bind mount стоят
+# ~0.6-2.7 мс/файл и делают каждый запрос на 10-40 с медленнее. Байткод
+# кэшируется навсегда; после правок PHP нужен `docker compose restart web`.
 RUN { \
       echo 'opcache.enable = 1'; \
       echo 'opcache.enable_cli = 0'; \
-      echo 'opcache.memory_consumption = 128'; \
+      echo 'opcache.memory_consumption = 192'; \
       echo 'opcache.interned_strings_buffer = 16'; \
       echo 'opcache.max_accelerated_files = 20000'; \
+      echo 'opcache.validate_timestamps = 0'; \
+      echo 'opcache.max_wasted_percentage = 10'; \
     } > /usr/local/etc/php/conf.d/opcache.ini
 
 WORKDIR /var/www/html
