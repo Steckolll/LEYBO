@@ -61,20 +61,37 @@ docker compose stop web
 ```
 
 2. Получить согласованный SQL-дамп вне репозитория. Не добавлять дамп в проект и не выводить его содержимое в логи.
-3. Импортировать дамп в базу только после проверки, что он обезличен:
+3. Импортировать дамп в базу только после проверки, что он обезличен. ВАЖНО: передавать дамп сырыми байтами — `Get-Content -Raw` перекодирует байты и даёт двойное кодирование кириллицы (испорченная схема `leybo_restore` — следствие именно этого). Правильный способ:
 
 ```powershell
-Get-Content -Raw "C:\path\to\staging.sql" | docker compose exec -T db mysql -uleybo -pleybo_pass leybo
+cmd /c "docker compose exec -T db mysql -uleybo -pleybo_pass leybo < C:\path\to\staging.sql"
 ```
 
-4. Проверить URL и staging-константы в `wp-config.php`, затем повторить проверки изоляции и данных.
-5. Запустить приложение:
+4. Проверить кодировку импорта байтами (ожидается HEX `D09A...` для «К...», а не `C390...`):
+
+```powershell
+docker compose exec -T db mysql -uleybo -pleybo_pass -D leybo -N -e "SELECT HEX(option_value) FROM wp_options WHERE option_name='blogname';"
+```
+
+5. После импорта ОБЯЗАТЕЛЬНО очистить кэш WP Fastest Cache — иначе сайт продолжит отдавать устаревший HTML из периода битых данных:
+
+```powershell
+docker compose exec -T web sh -lc "find /var/www/html/wp-content/cache/all -type f -delete; find /var/www/html/wp-content/cache/wpfc-minified -type f -delete"
+```
+
+7. Запустить приложение:
 
 ```powershell
 docker compose up -d
 ```
 
-6. Выполнить smoke-проверку главной, `/shop/`, каталога, товара, `/cart/`, `/checkout/`, `/my-account/` и `/wp-admin/`.
+8. Выполнить smoke-проверку главной, `/shop/`, каталога, товара, `/cart/`, `/checkout/`, `/my-account/` и `/wp-admin/`.
+
+Также mysqldump в rollback-файл сохранять сырыми байтами, без строкового перекодирования:
+
+```powershell
+cmd /c "docker compose exec -T db mysqldump -uleybo -pleybo_pass --single-transaction --no-tablespaces --routines --triggers leybo > C:\path\to\staging-rollback.sql"
+```
 
 ## Проверенная репетиция 2026-09-05
 
