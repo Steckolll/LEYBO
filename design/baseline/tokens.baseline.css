@@ -1,0 +1,54 @@
+/* LEYBO — baseline дизайн-токены, снятые с текущего сайта (этап 1, 2026-09-06).
+   Это ФИКСАЦИЯ как есть (as-is), а не целевая система.
+   Источники: assets/css/start.css (:root), assets/scss/*, скриншоты design/screenshots/.
+   Глобальных SCSS-переменных нет; 30+ цветов используются мимо этих токенов. */
+
+:root {
+  /* Цвета из существующего :root (start.css) */
+  --primary-color: #FFA000;   /* оранжевый акцент: 404, бейдж корзины, активные элементы */
+  --secondary-color: #EBEBEB; /* светло-серые подложки */
+  --white: #fff;
+  --gray: #BBBBBB;
+  --black: #000;
+  --light: #FAD79B;           /* персиковый (редко) */
+
+  /* Фактические цвета вне токенов (захардкожены в SCSS) */
+  --text-strong: #232323;     /* основной текст (17 использований) */
+  --text-muted: #767676;      /* вторичный текст */
+  --text-muted-2: #797979;
+  --border-gray: #BBBBBB;
+  --surface-lavender: #E9E6ED; /* подложки цен карточек, оттенки CFC8D8/B5ABC2/DCD7E2 */
+  --accent-purple: #720eec;    /* точечно (вероятно наследие WolfCollab/блога) — под вопросом */
+  --accent-red: #ff4444;       /* ошибки/скидки */
+  --woo-blue: #1e85be;         /* стандартный синий WooCommerce — наследие */
+
+  /* Типографика */
+  --font-base: "Montserrat", sans-serif;       /* body по умолчанию */
+  --font-secondary: "Nunito Sans", sans-serif; /* каталоговые подписи/карточки */
+  /* Размеры (фактические, px): 10, 12, 14, 15, 16 (base), 17, 18, 19, 20, 22, 24, 26, 28, 32, 62 */
+  --fs-body: 16px;
+  --fs-small: 14px;
+  --fs-caption: 12px;
+  --fs-h3: 18px;
+  --fs-h2: 24px;
+  --fs-h1: 32px;
+  --fs-display: 62px; /* только 404 */
+
+  /* Радиусы (без единой шкалы): 2px кнопки, 5px основной, 8px, 10px, 12px, 30px пилюли, 50% круг */
+  --radius-btn: 2px;
+  --radius-default: 5px;
+  --radius-card: 8px;
+  --radius-pill: 30px;
+
+  /* Сетка/отступы (утилиты из start.css) */
+  --gap-1: 10px;
+  --gap-2: 20px;
+  --gap-4: 40px;
+  --header-offset: 105px; /* .pt-prime */
+  /* Сетка: col-2/col-3/col-4/col-12 (grid), каталог = 4 колонки desktop */
+
+  /* Брейкпоинты (фактические, хаотичные): 480, 560, 767, 1023, 1100, 1110, 1220, 1280, 1400, 1500 */
+  --bp-mobile: 480px;
+  --bp-tablet: 1023px;
+  --bp-desktop: 1280px;
+}
