@@ -57,6 +57,14 @@ a { text-decoration: none; }
   padding: 13px 26px; font-size: 15px;
 }
 .btn-more:hover, button.single_add_to_cart_button:hover, .woocommerce button.button:hover { filter: brightness(.96); }
+.lmp_load_more_button { text-align: center; margin: 28px 0; }
+.lmp_load_more_button .lmp_button {
+  display: inline-block; background: #fff !important; color: var(--c-ink) !important;
+  border: 1px solid var(--c-ink) !important; border-radius: var(--c-radius) !important;
+  font-weight: 600 !important; font-size: 14px; padding: 13px 44px !important;
+}
+.lmp_load_more_button .lmp_button:hover { background: var(--c-ink) !important; color: #fff !important; }
+.lmp_products_loading .lmp_button { opacity: .6; }
 .woocommerce-message, .woocommerce-info { border-top-color: var(--c-accent); }
 
 /* ---------- Главная C: hero-оффер, тайлы, траст ---------- */
