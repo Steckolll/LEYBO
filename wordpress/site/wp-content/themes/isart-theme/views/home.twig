@@ -12,8 +12,12 @@
 					{% if home_hero.is_new %}<span class="c-hero-flag">НОВИНКА</span>{% endif %}
 					<h1 class="c-hero-title">{{ home_hero.title }}</h1>
 					<p class="c-hero-text">Оригинальная модель. Проверяем пару перед отправкой и привозим её вам.</p>
-					<div class="c-hero-price">{% if home_hero.is_variable %}<small>от </small>{% endif %}{{ home_hero.price|number_format(0, '.', ' ') }} ₽</div>
-					<a class="c-hero-cta" href="{{ home_hero.link }}">Выбрать размер</a>
+				<div class="c-hero-price">
+					{% if home_hero.is_variable %}<small>от </small>{% endif %}{{ home_hero.price|number_format(0, '.', ' ') }} ₽
+					{% if home_hero.price_regular %}<del>{{ home_hero.price_regular|number_format(0, '.', ' ') }} ₽</del>{% endif %}
+				</div>
+				{% if home_hero.benefit %}<div class="c-hero-benefit">Выгода {{ home_hero.benefit|number_format(0, '.', ' ') }} ₽</div>{% endif %}
+				<a class="c-hero-cta" href="{{ home_hero.link }}">Выбрать размер</a>
 				</div>
 			</section>
 		{% endif %}
@@ -45,6 +49,14 @@
 			<div class="sec" style="display:flex;justify-content:space-between;align-items:baseline;margin:40px 0 16px">
 				<h2 style="font-size:22px;font-weight:700">Свежие модели</h2>
 				<a class="c-sec-link" href="{{ site.link }}/shop/">Смотреть все</a>
+			</div>
+			<div class="c-chips">
+				<a class="c-chip on" href="{{ site.link }}/shop/">Все</a>
+				{% if tile_men %}<a class="c-chip" href="{{ tile_men.link }}">Мужские</a>{% endif %}
+				{% if tile_women %}<a class="c-chip" href="{{ tile_women.link }}">Женские</a>{% endif %}
+				<a class="c-chip" href="{{ site.link }}/shop/?orderby=price">Цена ↑</a>
+				<a class="c-chip" href="{{ site.link }}/shop/?orderby=price&order=desc">Цена ↓</a>
+				<a class="c-chip" href="{{ site.link }}/shop/?orderby=date">Новинки</a>
 			</div>
 			<div class="catalog_list d-grid col-4">
 				{% for post in c_hits %}

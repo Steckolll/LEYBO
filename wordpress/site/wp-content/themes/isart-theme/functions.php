@@ -263,12 +263,25 @@ class StarterSite extends TimberSite
 			if (!$hp || !$hp->get_image_id()) { continue; }
 			$file = get_attached_file($hp->get_image_id());
 			if (!$file || !file_exists($file)) { continue; }
+			// Цена героя: если товар реально со скидкой — показываем
+			// «новая + старая зачёркнутая + выгода» из настоящих цен WooCommerce.
+			$hero_price = $hp->is_type('variable') ? $hp->get_variation_price('min', true) : $hp->get_price();
+			$hero_regular = null; $hero_benefit = 0;
+			if ($hp->is_on_sale()) {
+				$reg = $hp->is_type('variable') ? (float) $hp->get_variation_regular_price('min', true) : (float) $hp->get_regular_price();
+				if ($reg > 0 && $hero_price > 0 && $hero_price < $reg) {
+					$hero_regular = $reg;
+					$hero_benefit = (int) round($reg - $hero_price);
+				}
+			}
 			$context['home_hero'] = array(
 				'link' => $hp->get_permalink(),
 				'img' => wp_get_attachment_image_url($hp->get_image_id(), 'full'),
 				'title' => $hp->get_title(),
 				'is_variable' => ($hp->get_type() === 'variable'),
-				'price' => $hp->is_type('variable') ? $hp->get_variation_price('min', true) : $hp->get_price(),
+				'price' => $hero_price,
+				'price_regular' => $hero_regular,
+				'benefit' => $hero_benefit,
 				'is_new' => (bool) get_field('новинка', $hp->get_id()),
 			);
 			break;

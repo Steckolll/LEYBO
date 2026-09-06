@@ -77,8 +77,16 @@ a { text-decoration: none; }
 .c-hero-text { font-family: var(--c-font-alt); color: var(--c-muted); font-size: 15px; line-height: 1.55; }
 .c-hero-price { font-size: 26px; font-weight: 800; }
 .c-hero-price small { font-size: 15px; font-weight: 600; color: var(--c-muted); }
+.c-hero-price del { color: var(--c-muted); font-weight: 500; font-size: 16px; margin-left: 8px; }
+.c-hero-benefit { color: var(--c-green); font-weight: 700; font-size: 14px; margin-top: -8px; }
 .c-hero-cta { background: var(--c-accent); color: var(--c-accent-ink); font-weight: 700; font-size: 16px; padding: 15px 34px; border-radius: var(--c-radius); }
 .c-hero-cta:hover { filter: brightness(.96); }
+
+/* Чипсы-фильтры (реальные ссылки на каталог) */
+.c-chips { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 14px; }
+.c-chip { border: 1px solid var(--c-border); border-radius: 8px; padding: 8px 15px; font-size: 13px; font-weight: 600; background: #fff; color: var(--c-ink); }
+.c-chip:hover { border-color: var(--c-ink); }
+.c-chip.on { background: var(--c-ink); color: #fff; border-color: var(--c-ink); }
 
 .c-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--c-gap); margin-top: var(--c-gap); }
 .c-tile { border: 1px solid var(--c-border); border-radius: var(--c-radius-lg); padding: 16px; display: flex; flex-direction: column; gap: 10px; background: #fff; color: var(--c-ink); }
@@ -94,6 +102,73 @@ a { text-decoration: none; }
 
 /* ---------- Подвал ---------- */
 .main-footer { border-top: 1px solid var(--c-border); margin-top: 48px; }
+
+/* ---------- Корзина / Checkout / Кабинет: система C ---------- */
+.woocommerce-cart-form, .cart_totals, .woocommerce-checkout-review-order,
+#order_review, .woocommerce-account .woocommerce,
+.woocommerce-MyAccount-content, .checkout_coupon, .woocommerce-form-login,
+.woocommerce-form-resetpass, .u-column1, .u-column2 {
+  border: 1px solid var(--c-border); border-radius: var(--c-radius-lg); background: #fff;
+}
+.woocommerce-cart-form { padding: 20px; }
+.cart_totals, .woocommerce-checkout-review-order, #order_review { padding: 20px; }
+.woocommerce-cart-form table, .woocommerce-checkout-review-order-table,
+#order_review table { border: none !important; }
+.woocommerce-cart-form th, .woocommerce-cart-form td,
+.woocommerce-checkout-review-order th, .woocommerce-checkout-review-order td,
+#order_review th, #order_review td { border-top: 1px dashed var(--c-border) !important; padding: 12px 10px !important; }
+.woocommerce-cart-form thead th, .woocommerce-checkout-review-order thead th,
+#order_review thead th { border-top: none !important; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--c-muted); }
+.woocommerce a.remove { color: var(--c-red) !important; border-radius: 6px; }
+.woocommerce-checkout #payment { background: var(--c-card); border-radius: var(--c-radius); }
+#add_payment_method #payment, .woocommerce-cart #payment { border-radius: var(--c-radius); }
+
+.woocommerce form .form-row input.input-text, .woocommerce form .form-row textarea,
+.woocommerce form .form-row select, .select2-container--default .select2-selection--single,
+.woocommerce-input-wrapper input, .woocommerce-input-wrapper select {
+  border: 1px solid var(--c-border) !important; border-radius: var(--c-radius) !important;
+  padding: 11px 12px !important; font-size: 14px; background: #fff;
+  outline: none; box-shadow: none !important;
+}
+.select2-container--default .select2-selection--single { height: 42px !important; padding-top: 6px !important; }
+.select2-container--default .select2-selection--single .select2-selection__arrow { height: 40px !important; }
+.woocommerce form .form-row label { font-size: 13px; font-weight: 600; color: var(--c-ink); }
+.woocommerce form .form-row input.input-text:focus, .woocommerce form .form-row textarea:focus {
+  border-color: var(--c-accent) !important; box-shadow: var(--c-focus) !important;
+}
+.woocommerce #respond input#submit.alt, .woocommerce a.button.alt,
+.woocommerce button.button.alt, .woocommerce input.button.alt,
+.woocommerce-checkout #place_order, .woocommerce button[name="update_cart"],
+.woocommerce button[name="apply_coupon"], .woocommerce a.button.wc-forward {
+  background: var(--c-accent) !important; color: var(--c-accent-ink) !important;
+  border-radius: var(--c-radius) !important; font-weight: 700 !important; border: none !important;
+}
+.woocommerce button[name="update_cart"], .woocommerce button[name="apply_coupon"] { padding: 11px 20px; }
+.woocommerce-checkout #place_order { width: 100%; padding: 16px; font-size: 16px; }
+.woocommerce-message { border-top-color: var(--c-green); border-radius: var(--c-radius); }
+.woocommerce-error { border-top-color: var(--c-red); border-radius: var(--c-radius); }
+
+/* Кабинет */
+.woocommerce-MyAccount-navigation ul { list-style: none; margin: 0; padding: 0; }
+.woocommerce-MyAccount-navigation li { border: 1px solid var(--c-border); border-radius: var(--c-radius); margin-bottom: 8px; background: #fff; }
+.woocommerce-MyAccount-navigation a { display: block; padding: 12px 16px; font-weight: 600; font-size: 14px; color: var(--c-ink); }
+.woocommerce-MyAccount-navigation .is-active a { background: var(--c-ink); color: #fff; border-radius: var(--c-radius); }
+.woocommerce-account .entry-content, .woocommerce-account .woocommerce h2 { font-size: 18px; }
+
+/* ---------- Карточка товара ---------- */
+.single-product div.product .woocommerce-tabs ul.tabs li { border-radius: var(--c-radius) var(--c-radius) 0 0; }
+.single-product .summary .price, .single-product .current_price {
+  font-size: 28px !important; font-weight: 800 !important; color: var(--c-ink);
+}
+.single-product .summary del { color: var(--c-muted); font-weight: 500; font-size: 18px; }
+.single-product .summary ins { text-decoration: none; }
+.single-product .quantity .qty { border: 1px solid var(--c-border) !important; border-radius: var(--c-radius) !important; height: 46px; }
+.single-product .quantity .btn.minus, .single-product .quantity .btn.plus {
+  background: #fff; border: 1px solid var(--c-border); border-radius: 6px; width: 34px; height: 34px; font-size: 18px; color: var(--c-ink);
+}
+.single-product .product_meta { font-size: 13px; color: var(--c-muted); }
+.woocommerce-tabs h2, .related.products h2 { font-size: 20px; font-weight: 700; }
+.single-product .woocommerce-product-details__short-description { font-family: var(--c-font-alt); color: var(--c-muted); line-height: 1.6; }
 
 /* ---------- Мобильная нижняя навигация ---------- */
 .mobile-nav { background: #fff; border-top: 1px solid var(--c-border); box-shadow: 0 -4px 16px rgba(0,0,0,.05); }
