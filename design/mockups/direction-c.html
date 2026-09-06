@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ЛЕЙБО — направление C «Конверсия»</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Nunito+Sans:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#141414; --muted:#5B5B5B; --border:#E2E2E2;
+  --accent:#FFA000; --accent-ink:#141414; --green:#0F8A4C; --red:#D64545;
+  --bg:#fff; --card:#F5F5F3;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Montserrat",sans-serif;color:var(--ink);background:var(--bg)}
+a{color:inherit;text-decoration:none}
+.container{max-width:1280px;margin:0 auto;padding:0 20px}
+
+/* Usp strip */
+.usp{background:var(--ink);color:#fff;font-size:12px;letter-spacing:.06em}
+.usp-in{display:flex;gap:32px;justify-content:center;padding:9px 0;flex-wrap:wrap}
+.usp b{color:var(--accent);font-weight:700;margin-right:6px}
+
+/* Header */
+header{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--border);z-index:10}
+.header-in{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:64px}
+.burger{width:22px;height:14px;position:relative}
+.burger span{position:absolute;left:0;width:22px;height:2px;background:var(--ink)}
+.burger span:nth-child(1){top:0}.burger span:nth-child(2){top:6px}.burger span:nth-child(3){top:12px}
+.logo{font-weight:800;font-size:24px;letter-spacing:.1em;text-align:center}
+.icons{display:flex;gap:16px;justify-content:flex-end;align-items:center}
+.icon{position:relative}
+.icon svg{width:21px;height:21px;stroke:var(--ink);fill:none;stroke-width:1.7}
+.cart-badge{position:absolute;top:-6px;right:-8px;background:var(--accent);color:var(--accent-ink);font-size:10px;font-weight:700;min-width:17px;height:17px;border-radius:9px;display:flex;align-items:center;justify-content:center}
+
+/* Promo hero: offer + CTA + urgency */
+.hero{display:grid;grid-template-columns:1.1fr 1fr;border:1px solid var(--border);margin-top:16px}
+.hero-media{position:relative;min-height:440px;background:var(--card)}
+.hero-media img{width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0}
+.hero-body{padding:44px 40px;display:flex;flex-direction:column;gap:20px;justify-content:center}
+.flag{align-self:flex-start;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:13px;padding:8px 14px;border-radius:4px;letter-spacing:.04em}
+.hero-body h1{font-size:38px;line-height:1.1;font-weight:800}
+.hero-body p{font-family:"Nunito Sans",sans-serif;color:var(--muted);font-size:16px;line-height:1.55}
+.price-row{display:flex;align-items:baseline;gap:14px}
+.price-now{font-size:30px;font-weight:800}
+.price-old{color:var(--muted);text-decoration:line-through;font-size:18px}
+.save{color:var(--green);font-weight:700;font-size:14px}
+.btn{display:flex;align-items:center;justify-content:center;border-radius:8px;font-weight:700;font-size:16px;padding:16px 28px}
+.btn-primary{background:var(--accent);color:var(--accent-ink)}
+.btn-dark{background:var(--ink);color:#fff}
+.urgency{font-size:13px;color:var(--muted)}
+.urgency b{color:var(--red)}
+
+/* Quick category tiles */
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+.qtile{border:1px solid var(--border);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.qtile img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:6px}
+.qtile b{font-size:15px}
+.qtile span{font-size:12px;color:var(--muted)}
+
+/* Section + filters visible */
+.sec{display:flex;justify-content:space-between;align-items:center;margin:40px 0 16px;gap:12px;flex-wrap:wrap}
+.sec h2{font-size:22px;font-weight:700}
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.fchip{border:1px solid var(--border);border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;background:#fff}
+.fchip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.fchip.price b{color:var(--accent-ink);background:var(--accent);border-radius:4px;padding:1px 6px}
+
+/* Grid */
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.card{border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff;display:block}
+.card .ph{position:relative;aspect-ratio:1/1.1;background:var(--card)}
+.card .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.card .hover{position:absolute;left:10px;right:10px;bottom:10px;opacity:0;transition:.15s}
+.card:hover .hover{opacity:1}
+.badge{position:absolute;top:10px;left:10px;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.badge span{font-size:11px;font-weight:700;padding:4px 9px;border-radius:4px}
+.b-sale{background:var(--red);color:#fff}
+.b-new{background:var(--accent);color:var(--accent-ink)}
+.b-last{background:#fff;color:var(--muted);border:1px solid var(--border)}
+.card .info{padding:12px 14px 14px}
+.price-row-sm{display:flex;align-items:baseline;gap:8px}
+.price{font-size:17px;font-weight:800}
+.price.old{font-size:13px;color:var(--muted);text-decoration:line-through;font-weight:500}
+.name{font-family:"Nunito Sans",sans-serif;font-size:13px;color:var(--ink);margin-top:3px;line-height:1.35;min-height:35px}
+.stock{font-size:11px;font-weight:700;margin-top:6px}
+.stock.ok{color:var(--green)}
+.stock.low{color:var(--red)}
+
+/* Trust row */
+.trust{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:36px 0}
+.tcell{border:1px solid var(--border);border-radius:10px;padding:18px;font-size:13px;line-height:1.45}
+.tcell b{display:block;font-size:14px;margin-bottom:6px}
+
+footer{border-top:1px solid var(--border);margin-top:40px;padding:26px 0 96px}
+.foot{display:flex;gap:26px;flex-wrap:wrap;font-size:13px}
+.socials{margin-left:auto;display:flex;gap:16px;color:var(--muted)}
+.copy{margin-top:14px;font-size:12px;color:var(--muted)}
+.bottom-nav{display:none}
+
+@media(max-width:768px){
+  .hero{grid-template-columns:1fr;margin-top:10px}
+  .hero-media{min-height:300px;position:relative}
+  .hero-body{padding:24px 20px;gap:14px}
+  .hero-body h1{font-size:26px}
+  .tiles{grid-template-columns:1fr 1fr}
+  .grid{grid-template-columns:1fr 1fr;gap:8px}
+  .trust{grid-template-columns:1fr 1fr}
+  .card .hover{opacity:1;position:static;margin:0 10px 10px}
+  footer{padding-bottom:120px}
+  .bottom-nav{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);padding:9px 0 12px;z-index:20}
+  .bn{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:var(--muted)}
+  .bn svg{width:20px;height:20px;stroke:var(--ink);fill:none;stroke-width:1.7}
+  .bn.cart svg{stroke:var(--accent-ink)}
+}
+</style>
+</head>
+<body>
+<div class="usp"><div class="container usp-in"><span><b>✓</b>Оригинал</span><span><b>→</b>Доставка 7–14 дней</span><span><b>✓</b>Оплата при получении</span><span><b>★</b>4.9 — 2 300+ отзывов</span></div></div>
+
+<header>
+  <div class="container header-in">
+    <div class="burger" aria-label="Меню"><span></span><span></span><span></span></div>
+    <a class="logo" href="#">ЛЕЙБО</a>
+    <div class="icons">
+      <span class="icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></span>
+      <span class="icon"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg></span>
+      <span class="icon"><svg viewBox="0 0 24 24"><path d="M6 7h12l1 14H5z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg><span class="cart-badge">3</span></span>
+      <span class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6"/></svg></span>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <section class="hero">
+    <div class="hero-media"><img src="assets/p1.jpg" alt="740 New Balance Chinese New Year"></div>
+    <div class="hero-body">
+      <span class="flag">ЛИМИТИРОВАННЫЙ РЕЛИЗ</span>
+      <h1>740 New Balance «Chinese New Year»</h1>
+      <p>Тираж к Новому году по лунному календарю. Оригинал, проверка каждой пары перед отправкой.</p>
+      <div class="price-row"><span class="price-now">от 9 200 ₽</span><span class="price-old">10 900 ₽</span><span class="save">выгода 1 700 ₽</span></div>
+      <a class="btn btn-primary" href="#">Выбрать размер</a>
+      <div class="urgency">Осталось <b>7 пар</b> · доставка к <b>15 сентября</b></div>
+    </div>
+  </section>
+
+  <div class="tiles">
+    <a class="qtile" href="#"><img src="assets/p4.jpg" alt=""><b>Женщинам</b><span>214 моделей</span></a>
+    <a class="qtile" href="#"><img src="assets/p0.jpg" alt=""><b>Мужчинам</b><span>331 модель</span></a>
+    <a class="qtile" href="#"><img src="assets/p6.jpg" alt=""><b>Новинки</b><span>56 моделей</span></a>
+    <a class="qtile" href="#"><img src="assets/p2.png" alt=""><b>Sale до −30%</b><span>успей до 20.09</span></a>
+  </div>
+
+  <div class="sec">
+    <h2>Хиты недели</h2>
+    <div class="filters">
+      <span class="fchip on">Все</span><span class="fchip">Мужские</span><span class="fchip">Женские</span><span class="fchip price">Цена <b>↓</b></span><span class="fchip">Размер</span>
+    </div>
+  </div>
+  <div class="grid">
+    <a class="card" href="#"><span class="ph"><span class="badge"><span class="b-new">Новинка</span></span><img src="assets/p0.jpg" alt=""></span><span class="info"><span class="price-row-sm"><span class="price">от 9 800 ₽</span></span><span class="name">1906 New Balance R 'Chinese New Year'</span><span class="stock ok">● В наличии: 12 размеров</span></span></a>
+    <a class="card" href="#"><span class="ph"><span class="badge"><span class="b-sale">−15%</span></span><img src="assets/p2.png" alt=""></span><span class="info"><span class="price-row-sm"><span class="price">от 6 700 ₽</span><span class="price old">7 900 ₽</span></span><span class="name">Adidas Campus 00s Dark Green Cloud White Men's</span><span class="stock low">● Осталось 3 пары</span></span></a>
+    <a class="card" href="#"><span class="ph"><span class="badge"><span class="b-last">Последний размер</span></span><img src="assets/p3.jpg" alt=""></span><span class="info"><span class="price-row-sm"><span class="price">от 10 100 ₽</span></span><span class="name">Adidas Forum Low Cl 'White Aurora Ruby'</span><span class="stock ok">● В наличии: 1 размер</span></span></a>
+    <a class="card" href="#"><span class="ph"><img src="assets/p5.jpg" alt=""></span><span class="info"><span class="price-row-sm"><span class="price">от 6 800 ₽</span></span><span class="name">Adidas Handball Spezial Brown Women's</span><span class="stock ok">● В наличии: 9 размеров</span></span></a>
+  </div>
+
+  <div class="trust">
+    <div class="tcell"><b>Оригинал 100%</b>Проверяем каждую пару перед отправкой — чек, бирки, качество.</div>
+    <div class="tcell"><b>Доставка 7–14 дней</b>По всей России, трек-номер в личном кабинете.</div>
+    <div class="tcell"><b>Оплата при получении</b>Платите после осмотра посылки в пункте выдачи.</div>
+    <div class="tcell"><b>Возврат по оферте</b>Если пара не подошла — вернём деньги по условиям.</div>
+  </div>
+</main>
+
+<footer>
+  <div class="container">
+    <div class="foot">
+      <a href="#">Публичная оферта</a><a href="#">Политика конфиденциальности</a><a href="#">Пользовательское соглашение</a><a href="#">Условия возврата</a><a href="#">Условия доставки</a>
+      <div class="socials"><a href="#">VK</a><a href="#">TikTok</a><a href="#">Telegram</a></div>
+    </div>
+    <div class="copy">© 2026 ЛЕЙБО</div>
+  </div>
+</footer>
+
+<nav class="bottom-nav">
+  <a class="bn" href="#"><svg viewBox="0 0 24 24"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>Меню</a>
+  <a class="bn" href="#"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>Поиск</a>
+  <a class="bn" href="#"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg>Избранное</a>
+  <a class="bn cart" href="#"><svg viewBox="0 0 24 24"><path d="M6 7h12l1 14H5z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>Корзина · 3</a>
+  <a class="bn" href="#"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6"/></svg>Кабинет</a>
+</nav>
+</body>
+</html>
