@@ -138,6 +138,8 @@ function add_styles()
 	time_enqueuer('swipercss', '/assets/css/swiper-bundle.min.css', 'style', false, 'all');
 	time_enqueuer('main', '/assets/css/main.css', 'style', false, 'all');
 	time_enqueuer('redesign', '/assets/css/redesign.css', 'style', false, 'all');
+	time_enqueuer('ctokens', '/assets/css/c-tokens.css', 'style', false, 'all');
+	time_enqueuer('ccomponents', '/assets/css/c-components.css', 'style', false, 'all');
 }
 
 add_action('wp_print_styles', 'add_styles');
@@ -246,7 +248,54 @@ class StarterSite extends TimberSite
 
 		$context['childs'] = Timber::get_terms($terms);
 
-
+		// C-direction home data (этап 3): hero-оффер, счётчики категорий, хиты.
+		// Hero и «Свежие модели» берём только из товаров с локально существующим
+		// фото: uploads 2026/06+ не переносились, свежие картинки дают 404.
+		$context['home_hero'] = null;
+		$hero_candidates = get_posts(array(
+			'post_type' => 'product', 'post_status' => 'publish',
+			'orderby' => 'date', 'order' => 'DESC', 'posts_per_page' => 10,
+			'date_query' => array(array('before' => '2026-06-01')),
+			'meta_query' => array(array('key' => '_thumbnail_id', 'compare' => 'EXISTS')),
+		));
+		foreach ($hero_candidates as $candidate) {
+			$hp = wc_get_product($candidate->ID);
+			if (!$hp || !$hp->get_image_id()) { continue; }
+			$file = get_attached_file($hp->get_image_id());
+			if (!$file || !file_exists($file)) { continue; }
+			$context['home_hero'] = array(
+				'link' => $hp->get_permalink(),
+				'img' => wp_get_attachment_image_url($hp->get_image_id(), 'full'),
+				'title' => $hp->get_title(),
+				'is_variable' => ($hp->get_type() === 'variable'),
+				'price' => $hp->is_type('variable') ? $hp->get_variation_price('min', true) : $hp->get_price(),
+				'is_new' => (bool) get_field('новинка', $hp->get_id()),
+			);
+			break;
+		}
+		foreach (array('women' => 'katalog-women', 'men' => 'katalog-men') as $key => $slug) {
+			$term = get_term_by('slug', $slug, 'product_cat');
+			$context['tile_' . $key] = ($term && !is_wp_error($term)) ? array(
+				'link' => get_term_link($term),
+				'count' => (int) $term->count,
+			) : null;
+		}
+		$context['c_hits'] = get_posts(array(
+			'post_type' => 'product', 'post_status' => 'publish',
+			'posts_per_page' => 4, 'orderby' => 'date', 'order' => 'DESC',
+			'date_query' => array(array('before' => '2026-06-01')),
+			'meta_query' => array('relation' => 'OR',
+				array('key' => 'хит', 'compare' => 'EXISTS'),
+				array('key' => 'новинка', 'compare' => 'EXISTS'),
+			),
+		));
+		if (count($context['c_hits']) < 4) {
+			$context['c_hits'] = get_posts(array(
+				'post_type' => 'product', 'post_status' => 'publish',
+				'posts_per_page' => 4, 'orderby' => 'date', 'order' => 'DESC',
+				'date_query' => array(array('before' => '2026-06-01')),
+			));
+		}
 
 		return $context;
 	}

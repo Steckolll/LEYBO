@@ -1,27 +1,65 @@
 {% include "partials/header.twig" %}
 
 <main class='main-content' id="app">
-	<div class="main-banner d-grid col-2 position-relative">
-		{% if leftBlock %}
-			<a href="{{ leftBlock.ссылка }}" class="go_catalog_link _women d-flex align-items-end justify-content-end position-relative">
-				<div class="go_catalog_image position-absolute start-0 top-0 end-0 bottom-0">
-					<img class="w-100 h-100" src="{{ leftBlock.картинка }}" alt="">
+	<div class="container">
+
+		{% if home_hero %}
+			<section class="c-hero">
+				<div class="c-hero-media">
+					<img src="{{ home_hero.img }}" alt="{{ home_hero.title }}">
 				</div>
-				{% if leftBlock.текст_ссылки %}
-					<div class="btn_go_catalog nunito">{{ leftBlock.текст_ссылки }}</div>
-				{% endif %}
-			</a>
-		{% endif %}
-		{% if rightBlock %}
-			<a href="{{ rightBlock.ссылка }}" class="go_catalog_link _men d-flex align-items-end justify-content-start position-relative">
-				<div class="go_catalog_image position-absolute start-0 top-0 end-0 bottom-0">
-					<img class="w-100 h-100" src="{{ rightBlock.картинка }}" alt="">
+				<div class="c-hero-body">
+					{% if home_hero.is_new %}<span class="c-hero-flag">НОВИНКА</span>{% endif %}
+					<h1 class="c-hero-title">{{ home_hero.title }}</h1>
+					<p class="c-hero-text">Оригинальная модель. Проверяем пару перед отправкой и привозим её вам.</p>
+					<div class="c-hero-price">{% if home_hero.is_variable %}<small>от </small>{% endif %}{{ home_hero.price|number_format(0, '.', ' ') }} ₽</div>
+					<a class="c-hero-cta" href="{{ home_hero.link }}">Выбрать размер</a>
 				</div>
-				{% if rightBlock.текст_ссылки %}
-					<div class="btn_go_catalog nunito">{{ rightBlock.текст_ссылки }}</div>
-				{% endif %}
-			</a>
+			</section>
 		{% endif %}
+
+		<div class="c-tiles">
+			{% if tile_women %}
+				<a class="c-tile" href="{{ tile_women.link }}">
+					<img src="{{ asset('assets/images/women.jpg') }}" alt="Женщинам">
+					<b>Женщинам</b><span>{{ tile_women.count }} моделей</span>
+				</a>
+			{% endif %}
+			{% if tile_men %}
+				<a class="c-tile" href="{{ tile_men.link }}">
+					<img src="{{ asset('assets/images/men.jpg') }}" alt="Мужчинам">
+					<b>Мужчинам</b><span>{{ tile_men.count }} моделей</span>
+				</a>
+			{% endif %}
+			<a class="c-tile" href="{{ site.link }}/shop/">
+				<img src="{{ asset('assets/images/looks.jpg') }}" alt="Новинки">
+				<b>Новинки</b><span>Свежие поступления</span>
+			</a>
+			<a class="c-tile" href="{{ site.link }}/kak-eto-rabotaet/">
+				<img src="{{ asset('assets/images/looks2.jpg') }}" alt="Как это работает">
+				<b>Как это работает</b><span>Порядок покупки и доставки</span>
+			</a>
+		</div>
+
+		{% if c_hits %}
+			<div class="sec" style="display:flex;justify-content:space-between;align-items:baseline;margin:40px 0 16px">
+				<h2 style="font-size:22px;font-weight:700">Свежие модели</h2>
+				<a class="c-sec-link" href="{{ site.link }}/shop/">Смотреть все</a>
+			</div>
+			<div class="catalog_list d-grid col-4">
+				{% for post in c_hits %}
+					{{ fn('product_render', post) }}
+				{% endfor %}
+			</div>
+		{% endif %}
+
+		<div class="c-trust">
+			<div class="c-trust-cell"><b>Проверка перед отправкой</b>Модель, размер, цвет и упаковка проверяются на складе перед отправкой вам.</div>
+			<div class="c-trust-cell"><b>Доставка 15–45 рабочих дней</b>Ориентировочный срок международной доставки с момента выкупа пары.</div>
+			<div class="c-trust-cell"><b>Доставка по России СДЭК</b>До пункта выдачи или адреса курьером, трек-номер в кабинете.</div>
+			<div class="c-trust-cell"><b>Возврат по условиям оферты</b>Содействие возврату и обмену по правилам, описанным в условиях.</div>
+		</div>
+
 	</div>
 </main>
 {% include "partials/footer.twig" %}

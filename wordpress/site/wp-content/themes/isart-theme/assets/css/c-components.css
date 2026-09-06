@@ -1,0 +1,107 @@
+/* LEYBO — компоненты направления C «Конверсия» (этап 3). Грузится последним, перекрывает main/redesign. */
+
+/* ---------- База ---------- */
+body { font-family: var(--c-font-base); color: var(--c-ink); }
+a { text-decoration: none; }
+:focus-visible { outline: none; box-shadow: var(--c-focus); border-radius: 4px; }
+
+/* ---------- USP-строка ---------- */
+.usp-strip { background: var(--c-ink); color: #fff; }
+.usp-strip-in { display: flex; gap: 28px; justify-content: center; align-items: center; padding: 8px 20px; flex-wrap: wrap; }
+.usp-strip-item { font-size: 12px; letter-spacing: .04em; white-space: nowrap; }
+.usp-strip-item b { color: var(--c-accent); font-weight: 700; margin-right: 6px; }
+@media (max-width: 767px) { .usp-strip-in { gap: 14px; padding: 7px 12px; } .usp-strip-item:nth-child(n+3) { display: none; } }
+
+/* ---------- Шапка: плотная, белая, в потоке ---------- */
+.main-header { position: sticky !important; top: 0; background: #fff; border-bottom: 1px solid var(--c-border); z-index: 50; height: 64px; overflow: visible; }
+.main-header-content { height: 64px; gap: 12px !important; margin: 0 auto !important; padding: 0 24px !important; }
+.header_logo img { height: 26px; width: auto; }
+.main-header_cats { top: 100%; background: #fff; }
+.pt-prime { padding-top: 24px !important; }
+
+/* ---------- Карточка товара в каталоге ---------- */
+.product-card { display: block; border: 1px solid var(--c-border); border-radius: var(--c-radius-lg); overflow: hidden; background: #fff; height: 100%; }
+.product-card .product-image { background: var(--c-card); border-radius: 0 !important; }
+.product-card .product-image img { mix-blend-mode: multiply; }
+.product-card-bottom { left: 10px; right: 10px; bottom: 10px; opacity: 0; transition: opacity .15s ease; }
+.product-card:hover .product-card-bottom,
+.product-card:focus-within .product-card-bottom { opacity: 1; }
+@media (hover: none) { .product-card-bottom { opacity: 1; } }
+
+.btn_buy { background: var(--c-accent) !important; color: var(--c-accent-ink) !important; font-weight: 700; font-size: 14px; border-radius: var(--c-radius) !important; padding: 11px 16px; }
+.btn_buy:hover { filter: brightness(.96); }
+
+.prod_tag { background: var(--c-accent); color: var(--c-accent-ink); font-weight: 700; font-size: 11px; padding: 4px 9px; border-radius: 4px; letter-spacing: .02em; }
+.prod_tag--sale { background: var(--c-red); color: #fff; }
+.prod_tag--hit { background: var(--c-ink); color: #fff; }
+
+.product-info { padding: 12px 14px 14px; background: #fff !important; border-radius: 0 !important; }
+.current-price { font-weight: 800 !important; font-size: var(--c-fs-md) !important; color: var(--c-ink); }
+.current-price del { color: var(--c-muted); font-weight: 500; font-size: 13px; margin-left: 6px; }
+.product-card-name { font-family: var(--c-font-alt); font-size: var(--c-fs-sm); font-weight: 400; color: var(--c-ink); line-height: 1.35; }
+.stock-line { font-size: var(--c-fs-xs); font-weight: 700; margin-top: 6px; }
+.stock-line--ok { color: var(--c-green); }
+.stock-line--out { color: var(--c-muted); font-weight: 500; }
+
+/* ---------- Каталог: шапка секции, фильтр, сортировка ---------- */
+.page_title { font-size: var(--c-fs-lg); font-weight: 700; }
+.catalog_head { margin: 14px 0 16px; }
+.btn_filter { border: 1px solid var(--c-border); border-radius: var(--c-radius); padding: 9px 16px; font-weight: 600; font-size: 13px; background: #fff; }
+.btn_filter:hover { border-color: var(--c-ink); }
+.catalog_sort select { border: 1px solid var(--c-border); border-radius: var(--c-radius); padding: 9px 12px; font-size: 13px; font-weight: 600; background: #fff; color: var(--c-ink); }
+.catalog_list { gap: var(--c-gap) !important; }
+.btn-more, button.single_add_to_cart_button, .woocommerce button.button,
+.woocommerce a.button, .woocommerce input.button, .btn_main {
+  background: var(--c-accent) !important; color: var(--c-accent-ink) !important;
+  border-radius: var(--c-radius) !important; font-weight: 700 !important; border: none !important;
+  padding: 13px 26px; font-size: 15px;
+}
+.btn-more:hover, button.single_add_to_cart_button:hover, .woocommerce button.button:hover { filter: brightness(.96); }
+.woocommerce-message, .woocommerce-info { border-top-color: var(--c-accent); }
+
+/* ---------- Главная C: hero-оффер, тайлы, траст ---------- */
+.c-hero { display: grid; grid-template-columns: 1.1fr 1fr; border: 1px solid var(--c-border); border-radius: var(--c-radius-lg); overflow: hidden; margin-top: 16px; }
+.c-hero-media { position: relative; min-height: 420px; background: var(--c-card); }
+.c-hero-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.c-hero-body { padding: 40px; display: flex; flex-direction: column; gap: 18px; justify-content: center; align-items: flex-start; }
+.c-hero-flag { background: var(--c-accent); color: var(--c-accent-ink); font-weight: 700; font-size: 12px; padding: 7px 13px; border-radius: 4px; letter-spacing: .04em; }
+.c-hero-title { font-size: var(--c-fs-hero); line-height: 1.12; font-weight: 800; }
+.c-hero-text { font-family: var(--c-font-alt); color: var(--c-muted); font-size: 15px; line-height: 1.55; }
+.c-hero-price { font-size: 26px; font-weight: 800; }
+.c-hero-price small { font-size: 15px; font-weight: 600; color: var(--c-muted); }
+.c-hero-cta { background: var(--c-accent); color: var(--c-accent-ink); font-weight: 700; font-size: 16px; padding: 15px 34px; border-radius: var(--c-radius); }
+.c-hero-cta:hover { filter: brightness(.96); }
+
+.c-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--c-gap); margin-top: var(--c-gap); }
+.c-tile { border: 1px solid var(--c-border); border-radius: var(--c-radius-lg); padding: 16px; display: flex; flex-direction: column; gap: 10px; background: #fff; color: var(--c-ink); }
+.c-tile img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 6px; }
+.c-tile b { font-size: 15px; color: var(--c-ink); }
+.c-tile span { font-size: 12px; color: var(--c-muted); }
+.c-tile:hover b { color: var(--c-accent-ink); text-decoration: underline; }
+.c-sec-link { font-size: 13px; color: var(--c-muted) !important; text-decoration: underline; }
+
+.c-trust { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--c-gap); margin: 36px 0 8px; }
+.c-trust-cell { border: 1px solid var(--c-border); border-radius: var(--c-radius-lg); padding: 16px; font-size: 13px; line-height: 1.5; color: var(--c-muted); }
+.c-trust-cell b { display: block; font-size: 14px; color: var(--c-ink); margin-bottom: 6px; }
+
+/* ---------- Подвал ---------- */
+.main-footer { border-top: 1px solid var(--c-border); margin-top: 48px; }
+
+/* ---------- Мобильная нижняя навигация ---------- */
+.mobile-nav { background: #fff; border-top: 1px solid var(--c-border); box-shadow: 0 -4px 16px rgba(0,0,0,.05); }
+
+/* ---------- Адаптив C-блоков ---------- */
+@media (max-width: 1023px) {
+  .c-hero { grid-template-columns: 1fr; }
+  .c-hero-media { min-height: 300px; }
+  .c-hero-body { padding: 24px 20px; gap: 14px; }
+  .c-hero-title { font-size: 26px; }
+  .c-hero-price { font-size: 22px; }
+  .c-tiles { grid-template-columns: 1fr 1fr; }
+  .c-trust { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 560px) {
+  .c-tiles { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .c-trust { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .c-tile { padding: 12px; }
+}

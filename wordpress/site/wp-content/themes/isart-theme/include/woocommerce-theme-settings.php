@@ -132,6 +132,24 @@ function product_render($post)
 	$context['newest'] = get_field('новинка', $context['id']);
 	$context['hit'] = get_field('хит', $context['id']);
 
+	// C-direction: честные бейдж скидки и наличие (этап 3).
+	$context['in_stock'] = ($context['stock_status'] === 'instock');
+	$context['sale_price'] = '';
+	$context['sale_percent'] = 0;
+	if ($product->is_on_sale()) {
+		if ($product->get_type() === 'variable') {
+			$reg = (float) $product->get_variation_regular_price('min', true);
+			$sale = (float) $product->get_variation_sale_price('min', true);
+		} else {
+			$reg = (float) $product->get_regular_price();
+			$sale = (float) $product->get_sale_price();
+		}
+		if ($reg > 0 && $sale > 0 && $sale < $reg) {
+			$context['sale_percent'] = (int) round(($reg - $sale) / $reg * 100);
+			$context['sale_price'] = $sale;
+		}
+	}
+
 
 	Timber::render('partials/product-item.twig', $context);
 }

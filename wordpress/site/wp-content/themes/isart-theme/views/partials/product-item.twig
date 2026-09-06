@@ -9,20 +9,23 @@
 		{% else %}
 			<img class="w-100 h-100 object-cover-50" src="{{ sitelink }}/wp-content/uploads/woocommerce-placeholder.png" alt="">
 		{% endif %}
+		<div class="tags_list d-flex position-absolute" style="top:10px;left:10px;gap:6px;z-index:2">
+			{% if sale_percent %}
+				<div class="prod_tag prod_tag--sale">−{{ sale_percent }}%</div>
+			{% endif %}
+			{% if newest %}
+				<div class="prod_tag">New</div>
+			{% endif %}
+			{% if hit %}
+				<div class="prod_tag prod_tag--hit">Hit</div>
+			{% endif %}
+		</div>
 		<div class="product-card-bottom position-absolute">
-			<div class="tags_list d-flex">
-				{% if newest %}
-					<div class="prod_tag">New</div>
-				{% endif %}
-				{% if hit %}
-					<div class="prod_tag">Hit</div>
-				{% endif %}
-			</div>
 			{% if prod_type == "variable" %}
-				<div class="btn btn_buy button add_to_cart_button ajax_add_to_cart d-flex align-items-center justify-content-center w-100">Посмотреть</div>
+				<div class="btn btn_buy button add_to_cart_button ajax_add_to_cart d-flex align-items-center justify-content-center w-100">Выбрать размер</div>
 			{% else %}
 				<object>
-					<a href="?add-to-cart='{{ id }}'" data-quantity="1" data-product_id="{{ id }}" class="btn btn_buy button add_to_cart_button ajax_add_to_cart d-flex align-items-center justify-content-center w-100"><div></div></a>
+					<a href="?add-to-cart='{{ id }}'" data-quantity="1" data-product_id="{{ id }}" class="btn btn_buy button add_to_cart_button ajax_add_to_cart d-flex align-items-center justify-content-center w-100">В корзину</a>
 				</object>
 			{% endif %}
 		</div>
@@ -37,6 +40,9 @@
 					от
 					{{ min_price|number_format(0, '.', ' ') }}
 					₽
+				{% elseif sale_price %}
+					{{ sale_price|number_format(0, '.', ' ') }}
+					₽ <del>{{ price|number_format(0, '.', ' ') }} ₽</del>
 				{% else %}
 					{{ price|number_format(0, '.', ' ') }}
 					₽
@@ -44,5 +50,8 @@
 			</div>
 		</div>
 		<h2 class="product-card-name text-center m-0">{{ title }}</h2>
+		<div class="stock-line text-center {% if in_stock %}stock-line--ok{% else %}stock-line--out{% endif %}">
+			{% if in_stock %}● В наличии{% else %}● Нет в наличии{% endif %}
+		</div>
 	</div>
 </a>
