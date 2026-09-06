@@ -179,6 +179,8 @@
 - Проверка прав файлов и HTTP-доступа к backup, логам, конфигам, installer и диагностике.
 - Повторная проверка staging isolation после каждой интеграционной правки.
 - Документированный список измененных файлов, таблиц, options, cron-задач, команд выкладки и точного rollback.
+- Уточнить семантику опции `novamira_ai_abilities_domain=leybo.store` (конфиг Novamira) перед продом: не создает ли она скрытый канал между staging и prod.
+- После любого восстановления/импорта БД запускать скан на prod-ссылки (меню, крошки, og:url, indexables) — замена URL при переносе исторически была частичной.
 
 ## 7. Результат проверки этапа 0 (2026-09-05)
 
@@ -275,6 +277,18 @@
 ### Контрольная сверка этапа 0 после инцидента с кодировкой (2026-09-05, вторая)
 
 Живые проверки после purge кэша и правок: контейнеры healthy (порт `127.0.0.1:8081`), `staging`/cron disabled/ext HTTP blocked/gateways=0/mail absorbed, 0 реальных email, 0 заказов, ключи очищены, 403 на все служебные пути, mojibake=0 на главной, HTTP-заголовок и meta `charset=UTF-8` присутствуют, админка 200/301. Этап 0 подтвержден повторно; единственное документированное отклонение — HTTP вместо HTTPS для локального loopback.
+
+### Инцидент: ссылки из staging на leybo.store (2026-09-06, закрыт)
+
+Пользователь сообщил, что переходы с карточек/меню ведут на прод. Диагноз: href карточек товара были корректными (localhost), но навигацию на прод давали пункты меню (`_menu_item_url`), хлебные крошки Yoast и мета `og:url`. Причина: прежняя замена URL при переносе затронула только часть таблиц (`stage_core_tables_before_url_replace.sql`), а meta/options/indexables остались с prod-URL.
+
+Скоуп (dry-run): `wp_postmeta._menu_item_url` — 2, `wp_options` — 11, `wp_posts.post_content` — 15, `wp_yoast_indexable.permalink` — 6 469, `wp_usermeta` — 2. Перед правкой сделан raw-dump `leybo-pre-urlfix-20260906-102709.sql` (вне репозитория).
+
+Выполнено: 2 menu-ссылки → localhost; 6 469 indexables → localhost с пересчётом `permalink_hash`; serialized-безопасный PHP-проход исправил 6 options + `wp_yoast_notifications`; 3 http-ссылки в post_content (картинка/CSV) → localhost; удалены 3 кэш-строки (um_cache_userdata_1 — содержал реальный email/PII, и два transients woocommerce blocks с prod-URL ассетов). Кэш WP Fastest Cache сброшен.
+
+Сознательно сохранено: `woocommerce_email_from_address=noreply@leybo.store` (email, не ссылка), текстовые упоминания «Магазин leybo.store» в юридических документах (бренд, не навигация), `novamira_ai_abilities_domain=leybo.store` (семантика конфига Novamira требует уточнения — внесено в список ревью уязвимых мест).
+
+Верификация: в БД 0 prod-ссылок во всех затронутых колонках; живой HTML `/`, `/shop/`, каталога — 0 упоминаний `leybo.store`; `og:url=http://localhost:8081/shop/`; пункты меню — localhost.
 
 ### Решение по этапу 0
 

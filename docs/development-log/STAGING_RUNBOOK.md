@@ -137,6 +137,16 @@ docker compose exec -T web php -r 'require "/var/www/html/wp-load.php"; wp_set_p
 
 Пароль держать вне репозитория и вне коммитов. Порт стенда привязан к `127.0.0.1`, доступ возможен только с локальной машины.
 
+## Проверка ссылок на прод (после любого импорта БД)
+
+Историческая замена URL при переносе была частичной, поэтому после restore проверять и при находках заменять `https://leybo.store` → `http://localhost:8081` (для serialized-значений — только serialized-безопасным PHP-проходом):
+
+```powershell
+docker compose exec -T db mysql -uleybo -pleybo_pass -D leybo -N -e "SELECT 'menu', COUNT(*) FROM wp_postmeta WHERE meta_key='_menu_item_url' AND meta_value LIKE '%leybo.store%' UNION ALL SELECT 'options', COUNT(*) FROM wp_options WHERE option_value LIKE '%leybo.store%' UNION ALL SELECT 'indexables', COUNT(*) FROM wp_yoast_indexable WHERE permalink LIKE '%leybo.store%' UNION ALL SELECT 'content_links', COUNT(*) FROM wp_posts WHERE post_content LIKE '%http://leybo.store%' OR post_content LIKE '%https://leybo.store%';"
+```
+
+После замен обязательно сбросить кэш WP Fastest Cache и проверить живой HTML (0 упоминаний `leybo.store` на `/`, `/shop/`, каталоге; `og:url` и пункты меню — localhost). Кэш-опции (`um_cache_userdata_*`, `_transient_*`) можно удалять целиком — они пересоздаются; помни, что `um_cache_userdata_*` может содержать реальные email (PII).
+
 ## Известные ограничения
 
 - WP-Cron отключен; события синхронизации не выполняются автоматически.
