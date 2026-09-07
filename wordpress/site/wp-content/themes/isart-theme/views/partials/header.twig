@@ -33,31 +33,32 @@
 		<header class="main-header position-absolute top-0 start-0 end-0">
 			<div class="container">
 				<div class="main-header-content d-grid col-12 gap-1 align-items-center">
-					<div class="main-header-left d-flex align-items-center">
-						<button class="btn btn-hamburger btn-hamburger-1 js_hamburger d-flex align-items-center">
-							<div class="menu-icon position-relative">
-								<span class="position-absolute"></span>
-								<span class="position-absolute"></span>
-							</div>
-						</button>
-					</div>
-					<a href="{{ site.link }}" class="header_logo d-flex">
-						<img src="{{ asset('assets/images/logo_new.svg') }}" alt="">
-					</a>
-					<div class="main-header-right d-flex align-items-center justify-content-end">
-						<button class="btn btn_search header_control d-flex justify-content-center align-items-center">
-							<img src="{{ asset('assets/images/search.svg') }}" alt="">
-						</button>
-						<a href="{{ site.link }}/wishlist/" class="favorites_link header_control d-flex justify-content-center align-items-center">
-							<img src="{{ asset('assets/images/fav.svg') }}" alt="">
-						</a>
-						<div class="cart-fragment">
-							{% do action('header_action') %}
+				<div class="main-header-left d-flex align-items-center">
+					<button class="btn btn-hamburger btn-hamburger-1 js_hamburger d-flex align-items-center" aria-label="Меню">
+						<div class="menu-icon position-relative">
+							<span class="position-absolute"></span>
+							<span class="position-absolute"></span>
+							<span class="position-absolute"></span>
 						</div>
-						<a href="{{ site.link }}/my-account" class="account_link header_control d-flex justify-content-center align-items-center">
-							<img src="{{ asset('assets/images/profile.svg') }}" alt="">
-						</a>
+					</button>
+				</div>
+				<a href="{{ site.link }}" class="header_logo d-flex">
+					<img src="{{ asset('assets/images/logo_new.svg') }}" alt="">
+				</a>
+				<div class="main-header-right d-flex align-items-center justify-content-end">
+					<button class="btn btn_search header_control d-flex justify-content-center align-items-center" aria-label="Поиск">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+					</button>
+					<a href="{{ site.link }}/wishlist/" class="favorites_link header_control d-flex justify-content-center align-items-center" aria-label="Избранное">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4z"/></svg>
+					</a>
+					<div class="cart-fragment">
+						{% do action('header_action') %}
 					</div>
+					<a href="{{ site.link }}/my-account" class="account_link header_control d-flex justify-content-center align-items-center" aria-label="Кабинет">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6"/></svg>
+					</a>
+				</div>
 				</div>
 					{% if current_term and child_categories %}
 						<div class="main-header_cats">
@@ -129,31 +130,30 @@
 			</div>
 		</div>
 		<div class="mobile-nav d-flex justify-content-between align-items-center">
-			<button class="btn btn-hamburger btn-hamburger-1 js_hamburger mobile-nav-item d-flex flex-column align-items-center">
-				<div class="menu-icon position-relative">
-					<span class="position-absolute"></span>
-					<span class="position-absolute"></span>
+			<button class="btn btn-hamburger btn-hamburger-1 js_hamburger mobile-nav-item d-flex flex-column align-items-center" aria-label="Меню">
+				<div class="mobile-nav-item--icon burger-icon position-relative">
+					<span></span><span></span><span></span>
 				</div>
 				<div class="mobile-nav-item--name">Меню</div>
 			</button>
-			<button class="btn btn_search mobile-nav-item d-flex flex-column justify-content-between align-items-center">
+			<button class="btn btn_search mobile-nav-item d-flex flex-column justify-content-between align-items-center" aria-label="Поиск">
 				<div class="mobile-nav-item--icon">
-					<img src="{{ asset('assets/images/search.svg') }}" alt="">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
 				</div>
 				<div class="mobile-nav-item--name">Поиск</div>
 			</button>
-			<a href="{{ site.link }}/wishlist/" class="mobile-nav-item d-flex flex-column justify-content-between align-items-center">
+			<a href="{{ site.link }}/wishlist/" class="mobile-nav-item d-flex flex-column justify-content-between align-items-center" aria-label="Избранное">
 				<div class="mobile-nav-item--icon">
-					<img src="{{ asset('assets/images/fav.svg') }}" alt="">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4z"/></svg>
 				</div>
 				<div class="mobile-nav-item--name">Избранное</div>
 			</a>
 			<div class="cart-fragment">
 				{% do action('header_action') %}
 			</div>
-			<a href="{{ site.link }}/my-account" class="mobile-nav-item d-flex flex-column justify-content-between align-items-center">
+			<a href="{{ site.link }}/my-account" class="mobile-nav-item d-flex flex-column justify-content-between align-items-center" aria-label="Кабинет">
 				<div class="mobile-nav-item--icon">
-					<img src="{{ asset('assets/images/profile.svg') }}" alt="">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6"/></svg>
 				</div>
 				<div class="mobile-nav-item--name">Кабинет</div>
 			</a>

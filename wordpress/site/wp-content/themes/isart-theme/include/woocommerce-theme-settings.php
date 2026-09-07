@@ -18,17 +18,19 @@ function woocommerce_header_add_to_cart_fragment($fragments)
 }
 function my_wc_cart_count()
 {
-	global $woocommerce; ?>
+	global $woocommerce;
+	$cart_svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12l1 14H5z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>';
+	?>
 
 	<a href="<?= get_site_url(); ?>/cart" class="btn main-header-cart d-flex flex-column justify-content-center align-items-center position-relative">
 		<span class="main-header-cart--icon position-relative">
-			<img src="<?php echo get_template_directory_uri(); ?>/assets/images/cart.svg" alt="">
+			<?= $cart_svg ?>
 			<span class="main-header-cart--count d-flex align-items-center justify-content-center position-absolute"><?php echo count(WC()->cart->get_cart_contents()); ?></span>
 		</span>
 	</a>
 	<a href="<?= get_site_url(); ?>/cart" class="mobile-nav-item d-flex flex-column justify-content-between align-items-center">
 		<div class="mobile-nav-item--icon position-relative">
-			<img src="<?php echo get_template_directory_uri(); ?>/assets/images/cart.svg" alt="">
+			<?= $cart_svg ?>
 			<span class="main-header-cart--count d-flex align-items-center justify-content-center position-absolute"><?php echo count(WC()->cart->get_cart_contents()); ?></span>
 		</div>
 		<div class="mobile-nav-item--name">Корзина</div>

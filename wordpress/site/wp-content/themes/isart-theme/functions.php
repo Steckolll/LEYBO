@@ -252,6 +252,7 @@ class StarterSite extends TimberSite
 		// Hero и «Свежие модели» берём только из товаров с локально существующим
 		// фото: uploads 2026/06+ не переносились, свежие картинки дают 404.
 		$context['home_hero'] = null;
+		$hero_fallback = null;
 		$hero_candidates = get_posts(array(
 			'post_type' => 'product', 'post_status' => 'publish',
 			'orderby' => 'date', 'order' => 'DESC', 'posts_per_page' => 10,
@@ -263,8 +264,6 @@ class StarterSite extends TimberSite
 			if (!$hp || !$hp->get_image_id()) { continue; }
 			$file = get_attached_file($hp->get_image_id());
 			if (!$file || !file_exists($file)) { continue; }
-			// Цена героя: если товар реально со скидкой — показываем
-			// «новая + старая зачёркнутая + выгода» из настоящих цен WooCommerce.
 			$hero_price = $hp->is_type('variable') ? $hp->get_variation_price('min', true) : $hp->get_price();
 			$hero_regular = null; $hero_benefit = 0;
 			if ($hp->is_on_sale()) {
@@ -274,7 +273,8 @@ class StarterSite extends TimberSite
 					$hero_benefit = (int) round($reg - $hero_price);
 				}
 			}
-			$context['home_hero'] = array(
+			$is_new = (bool) get_field('новинка', $hp->get_id());
+			$entry = array(
 				'link' => $hp->get_permalink(),
 				'img' => wp_get_attachment_image_url($hp->get_image_id(), 'full'),
 				'title' => $hp->get_title(),
@@ -282,10 +282,14 @@ class StarterSite extends TimberSite
 				'price' => $hero_price,
 				'price_regular' => $hero_regular,
 				'benefit' => $hero_benefit,
-				'is_new' => (bool) get_field('новинка', $hp->get_id()),
+				'is_new' => $is_new,
 			);
-			break;
+			// Приоритет: товар с меткой «новинка» или реальной скидкой —
+			// тогда hero выглядит как в утверждённом макете (флаг + выгода).
+			if ($is_new || $hero_benefit > 0) { $context['home_hero'] = $entry; break; }
+			if ($hero_fallback === null) { $hero_fallback = $entry; }
 		}
+		if ($context['home_hero'] === null && $hero_fallback !== null) { $context['home_hero'] = $hero_fallback; }
 		foreach (array('women' => 'katalog-women', 'men' => 'katalog-men') as $key => $slug) {
 			$term = get_term_by('slug', $slug, 'product_cat');
 			$context['tile_' . $key] = ($term && !is_wp_error($term)) ? array(
