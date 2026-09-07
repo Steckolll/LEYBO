@@ -86,9 +86,10 @@ a { text-decoration: none; }
 .btn-more:hover, button.single_add_to_cart_button:hover, .woocommerce button.button:hover { filter: brightness(.96); }
 .lmp_load_more_button { text-align: center; margin: 28px 0; }
 .lmp_load_more_button .lmp_button {
-  display: inline-block; background: #fff !important; color: var(--c-ink) !important;
+  display: inline-block !important; background: #fff !important; color: var(--c-ink) !important;
   border: 1px solid var(--c-ink) !important; border-radius: var(--c-radius) !important;
   font-weight: 600 !important; font-size: 14px; padding: 13px 44px !important;
+  white-space: nowrap !important; width: auto !important; max-width: none !important; height: auto !important;
 }
 .lmp_load_more_button .lmp_button:hover { background: var(--c-ink) !important; color: #fff !important; }
 .lmp_products_loading .lmp_button { opacity: .6; }
