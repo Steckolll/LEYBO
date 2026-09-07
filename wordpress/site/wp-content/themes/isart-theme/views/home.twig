@@ -25,6 +25,44 @@
 			</section>
 		{% endif %}
 
+	</div>
+
+	{# Полоса-разделитель посреди страницы — как в утверждённом макете C
+	   (на мобильной ширине; на десктопе скрыта). Иконки/ссылки рабочие. #}
+	<div class="mobile-nav-mid d-flex justify-content-between align-items-center">
+		<button class="btn btn-hamburger js_hamburger mobile-nav-item d-flex flex-column align-items-center" aria-label="Меню">
+			<div class="mobile-nav-item--icon burger-icon position-relative">
+				<span></span><span></span><span></span>
+			</div>
+			<div class="mobile-nav-item--name">Меню</div>
+		</button>
+		<button class="btn btn_search mobile-nav-item d-flex flex-column justify-content-between align-items-center" aria-label="Поиск">
+			<div class="mobile-nav-item--icon">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+			</div>
+			<div class="mobile-nav-item--name">Поиск</div>
+		</button>
+		<a href="{{ site.link }}/wishlist/" class="mobile-nav-item d-flex flex-column justify-content-between align-items-center" aria-label="Избранное">
+			<div class="mobile-nav-item--icon">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4z"/></svg>
+			</div>
+			<div class="mobile-nav-item--name">Избранное</div>
+		</a>
+		<a href="{{ site.link }}/cart/" class="mobile-nav-item d-flex flex-column justify-content-between align-items-center" aria-label="Корзина">
+			<div class="mobile-nav-item--icon">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12l1 14H5z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>
+			</div>
+			<div class="mobile-nav-item--name">Корзина</div>
+		</a>
+		<a href="{{ site.link }}/my-account" class="mobile-nav-item d-flex flex-column justify-content-between align-items-center" aria-label="Кабинет">
+			<div class="mobile-nav-item--icon">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6"/></svg>
+			</div>
+			<div class="mobile-nav-item--name">Кабинет</div>
+		</a>
+	</div>
+
+	<div class="container">
 		<div class="c-tiles">
 			{% if tile_women %}
 				<a class="c-tile" href="{{ tile_women.link }}">
