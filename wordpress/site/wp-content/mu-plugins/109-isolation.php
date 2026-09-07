@@ -41,9 +41,16 @@ class Leybo_Isolation {
 			return new WP_Error( 'leybo_blocked', 'Outbound HTTP blocked on staging.' );
 		}, 1, 3 );
 
-		// 4. На staging нельзя провести заказ через любой gateway, включая
-		// зарегистрированный sandbox-кодом тестовый gateway.
-		add_filter( 'woocommerce_available_payment_gateways', function () {
+		// 4. На staging из всех gateway разрешён ТОЛЬКО тестовый (leybo_test):
+		// нужен для end-to-end проверки корзины/checkout (этапы 5–6), деньги
+		// ненастоящие, внешний контур по-прежнему заблокирован. Реальные
+		// gateway (bacs/cheque/cod/сторонние) — никогда на этом стенде.
+		add_filter( 'woocommerce_available_payment_gateways', function ( $gateways ) {
+			foreach ( (array) $gateways as $id => $gw ) {
+				if ( $id === 'leybo_test' ) {
+					return array( 'leybo_test' => $gw );
+				}
+			}
 			return array();
 		}, 1 );
 
