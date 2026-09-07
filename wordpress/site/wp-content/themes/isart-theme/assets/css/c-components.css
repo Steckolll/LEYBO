@@ -213,23 +213,34 @@ a { text-decoration: none; }
 .mobile-nav .cart-fragment .mobile-nav-item--name { color: var(--c-accent-ink); }
 
 /* Статичная полоса-разделитель посреди главной — как в утверждённом макете.
-   На мобильной ширине: белая полоса с иконками между hero и плитками.
-   На десктопе скрыта. */
-.mobile-nav-mid { display: none; }
+   Видна на всех ширинах: на десктопе — центрированное меню,
+   на мобильной — компактная полоса на всю ширину. */
+.mobile-nav-mid {
+  display: flex !important;
+  position: static;
+  align-items: center;
+  justify-content: center;
+  gap: 56px;
+  background: #fff;
+  border-top: 1px solid #CFCFCF;
+  border-bottom: 1px solid #CFCFCF;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .06);
+  padding: 14px 24px;
+  margin: 18px 0 20px;
+}
+.mobile-nav-mid .mobile-nav-item--icon svg { width: 22px; height: 22px; color: var(--c-ink); display: block; }
+.mobile-nav-mid .mobile-nav-item { display: flex !important; flex-direction: column; align-items: center; gap: 4px; }
+.mobile-nav-mid .burger-icon span { display: block; width: 22px; height: 2px; background: var(--c-ink); border-radius: 2px; margin: 2.5px 0; }
+.mobile-nav-mid .mobile-nav-item--name { color: var(--c-ink); font-size: 10px; font-weight: 600; margin-top: 4px; }
+.mobile-nav-mid .mobile-nav-item:hover svg,
+.mobile-nav-mid .mobile-nav-item:hover .mobile-nav-item--name { color: var(--c-accent-ink); filter: brightness(.7); }
 @media (max-width: 767px) {
   .mobile-nav-mid {
-    display: flex !important;
-    position: static;
-    background: #fff;
-    border-top: 1px solid #CFCFCF;
-    border-bottom: 1px solid #CFCFCF;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, .07);
+    justify-content: space-between;
+    gap: 0;
     padding: 9px 8px 11px;
     margin: 14px 0 16px;
   }
-  .mobile-nav-mid .mobile-nav-item--icon svg { width: 22px; height: 22px; color: var(--c-ink); display: block; }
-  .mobile-nav-mid .burger-icon span { display: block; width: 22px; height: 2px; background: var(--c-ink); border-radius: 2px; margin: 2.5px 0; }
-  .mobile-nav-mid .mobile-nav-item--name { color: var(--c-ink); font-size: 10px; font-weight: 600; margin-top: 4px; }
 }
 
 /* ---------- Мобильная нижняя навигация ---------- */
