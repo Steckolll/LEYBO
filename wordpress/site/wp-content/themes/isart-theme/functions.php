@@ -560,6 +560,18 @@ add_action('pre_get_posts', function($q){
 // wp-content/languages/plugins/ (реестр Кирилла, п.2) — gettext-костыль снят.
 // JS-замена счётчика Berocket в footer.twig осталась: плагин рисует его на клиенте.
 
+// Баг A (этап 5): ajax-перехват кнопки «В корзину» плагином xt-woo-ajax-add-to-cart
+// ненадёжен: запрос через его ajaxqueue доходит до Woo пустым/не доходит вовсе
+// (диагностика в debug.log [bugA]*), покупатель молча не получает товар.
+// Штатный non-ajax путь WooCommerce полностью рабочий. Поэтому принудительно
+// выключаем ajax на карточке товара: форма отправляется стандартно, товар
+// добавляется штатным WC_Form_Handler с notice. Плагин не редактируется.
+add_filter('option_xt_framework_add-to-cart', function ($value) {
+	if (!is_array($value)) { $value = array(); }
+	$value['single_ajax_add_to_cart'] = false;
+	return $value;
+});
+
 // Staging-safe mail defaults. Production delivery belongs in deployment config.
 add_action('phpmailer_init', function($pm){
 	$pm->Sender = 'noreply@example.invalid';
