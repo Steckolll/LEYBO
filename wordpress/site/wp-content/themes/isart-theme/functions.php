@@ -556,31 +556,9 @@ add_action('pre_get_posts', function($q){
 	$q->set('posts_per_page', 12);
 });
 
-// Русские строки WooCommerce: в локальной копии нет языковых пакетов
-// (wp-content/languages пуст, скачивание с wp.org на стенде заблокировано).
-// Правильный фикс — перенести woocommerce-ru_RU.mo с прода; до тех пор
-// ключевые строки держим русскими через gettext.
-add_filter('gettext', function ($translated, $text, $domain) {
-	if ($domain !== 'woocommerce') { return $translated; }
-	$map = array(
-		'Showing %1$d–%2$d of %3$d results' => 'Показано %1$d–%2$d из %3$d',
-		'Showing %1$d of %3$d results'      => 'Показано %1$d из %3$d',
-		'Default sorting'                   => 'Исходная сортировка',
-		'Sort by popularity'                => 'По популярности',
-		'Sort by latest'                    => 'Сначала новые',
-		'Sort by price: low to high'        => 'Цена: по возрастанию',
-		'Sort by price: high to low'        => 'Цена: по убыванию',
-		'Select options'                    => 'Выбрать размер',
-		'Add to cart'                       => 'В корзину',
-		'This product is currently out of stock and unavailable.' => 'Сейчас этой модели нет в наличии.',
-		'Out of stock'                      => 'Нет в наличии',
-		'In stock'                          => 'В наличии',
-		'Cart'                              => 'Корзина',
-		'Product category'                  => 'Категория',
-		'Products'                          => 'Товары',
-	);
-	return isset($map[$text]) ? $map[$text] : $translated;
-}, 10, 3);
+// Перевод WooCommerce: настоящий woocommerce-ru_RU.mo перенесён с прода в
+// wp-content/languages/plugins/ (реестр Кирилла, п.2) — gettext-костыль снят.
+// JS-замена счётчика Berocket в footer.twig осталась: плагин рисует его на клиенте.
 
 // Staging-safe mail defaults. Production delivery belongs in deployment config.
 add_action('phpmailer_init', function($pm){
