@@ -256,7 +256,6 @@ class StarterSite extends TimberSite
 		$hero_candidates = get_posts(array(
 			'post_type' => 'product', 'post_status' => 'publish',
 			'orderby' => 'date', 'order' => 'DESC', 'posts_per_page' => 10,
-			'date_query' => array(array('before' => '2026-06-01')),
 			'meta_query' => array(array('key' => '_thumbnail_id', 'compare' => 'EXISTS')),
 		));
 		foreach ($hero_candidates as $candidate) {
@@ -300,7 +299,6 @@ class StarterSite extends TimberSite
 		$context['c_hits'] = get_posts(array(
 			'post_type' => 'product', 'post_status' => 'publish',
 			'posts_per_page' => 4, 'orderby' => 'date', 'order' => 'DESC',
-			'date_query' => array(array('before' => '2026-06-01')),
 			'meta_query' => array('relation' => 'OR',
 				array('key' => 'хит', 'compare' => 'EXISTS'),
 				array('key' => 'новинка', 'compare' => 'EXISTS'),
@@ -310,8 +308,7 @@ class StarterSite extends TimberSite
 			$context['c_hits'] = get_posts(array(
 				'post_type' => 'product', 'post_status' => 'publish',
 				'posts_per_page' => 4, 'orderby' => 'date', 'order' => 'DESC',
-				'date_query' => array(array('before' => '2026-06-01')),
-			));
+				));
 		}
 
 		return $context;
@@ -615,3 +612,4 @@ add_filter('timber/context', function ($context) {
 
     return $context;
 });
+
