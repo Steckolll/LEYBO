@@ -572,6 +572,22 @@ add_filter('option_xt_framework_add-to-cart', function ($value) {
 	return $value;
 });
 
+// Баг A, часть 2:_xt_woo-ajax-add-to-cart портит и СТАНДАРТНЫЙ wc-ajax=add_to_cart:
+// его хук cart_fragments висит на add_to_cart_fragments и в связке с прод-настройками
+// давал пустые/ошибочные ответы для fetch-запросов. Обработчик ниже выполняет
+// штатное добавление и возвращает стандартные фрагменты (приоритет 1 — раньше
+// конфликтного кода), sold_individually-товары не задваиваются.
+add_action('wc_ajax_add_to_cart', function () {
+	if (!class_exists('WC_Form_Handler') || !class_exists('WC_Ajax')) { return; }
+	$added = WC()->cart->add_to_cart(
+		absint($_POST['product_id'] ?? 0),
+		max(1, absint($_POST['quantity'] ?? 1)),
+		absint($_POST['variation_id'] ?? 0),
+		array_intersect_key($_POST, array_flip(preg_grep('/^attribute_/', array_keys($_POST))))
+	);
+	WC_Ajax::get_refreshed_fragments(); // JSON-фрагменты + exit
+}, 1);
+
 // Staging-safe mail defaults. Production delivery belongs in deployment config.
 add_action('phpmailer_init', function($pm){
 	$pm->Sender = 'noreply@example.invalid';
