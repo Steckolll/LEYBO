@@ -111,6 +111,25 @@ docker compose exec -T db mysql -uroot -prootpass -e "DROP DATABASE IF EXISTS le
 
 После restore нужно вернуть `DB_NAME=leybo` в локальном `wp-config.php` и перезапустить только web-контейнер. Схему `leybo_restore` удалить после принятия результатов отдельным решением, а не автоматически.
 
+## Архитектура стенда: volume вместо bind mount (2026-09-09)
+
+Файлы сайта перенесены из bind mount (`wordpress/site` на диске C:) в Docker volume `leybo_site_data` (внешний, имя закреплено в compose). Причина: Windows bind mount давал file_exists ×575 и чтение ×152 медленнее контейнерной ФС — страницы 4–13 с, админка до 40 с. Исключение Defender эффекта не дало.
+
+**Результат:** checkout/login ~0.5 с, admin-редирект ~1 с, главная/каталог/корзина/кабинет ~4 с (холодный WPFC), WPFC-кэш для гостей пересобирается и отдаётся.
+
+**Правка кода:** файлы правятся в `wordpress/site/...` как раньше, НО на стенд попадают через `powershell -File wordpress\sync.ps1` (тема/mu-plugins/языки/sandbox) или `sync.ps1 -Full` (весь сайт). Скрипт сам перезапускает web (opcache).
+
+**Откат на bind mount (пошагово):**
+1. В `docker-compose.yml` закомментировать строку `leybo_site_data:/var/www/html`, раскомментировать `- ../wordpress/site:/var/www/html`.
+2. `docker compose up -d`.
+3. Файлы на хосте не тронуты; изменения, сделанные на стенде после перехода (uploads новых медиа), при необходимости синхронизируются обратно: `docker cp leybo-web:/var/www/html/wp-content/uploads C:\...\wordpress\site\wp-content\`.
+4. БД (volume `wordpress_leybo_db_data`) миграцией не затрагивалась.
+
+**Fresh-копирование хост → volume (полный ресинк данных):**
+```bash
+docker run --rm -v leybo_site_data:/target -v "C:\Users\user\Projects\LEYBO\wordpress\site:/src:ro" wordpress-web sh -c "cp -a /src/. /target/ && chown -R 33:33 /target"
+```
+
 ## Обязательное правило
 
 Не запускать `docker compose down -v` без отдельного решения: команда удалит volume базы и локальное состояние. Перед разрушительными действиями нужен новый локальный backup volume/БД.
