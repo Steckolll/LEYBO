@@ -18,7 +18,27 @@ class Leybo_Isolation {
 	const LOG = 'leybo-isolation';
 
 	public static function init() {
-		// 1. Почта: полностью запретить.
+		// 1a. Утечка существования аккаунта (этап 6, ТЗ: «сообщения об ошибках без
+	// утечки существования аккаунта»): Woo/WP для несуществующего юзера
+	// возвращают «The username ... is not registered», а для существующего —
+	// «incorrect password». Унифицирую оба случая generic-текстом.
+	add_filter('authenticate', function ($user) {
+		if (is_wp_error($user) && in_array($user->get_error_code(), array('invalid_username', 'invalid_email', 'incorrect_password'), true)) {
+			return new WP_Error('authentication_failed', 'Ошибка: неверное имя пользователя или пароль.');
+		}
+		return $user;
+	}, 100);
+	add_filter('lostpassword_errors', function ($errors) {
+		foreach ($errors->get_error_codes() as $code) {
+			if (in_array($code, array('invalid_username', 'invalid_email', 'empty_username'), true)) {
+				$errors->remove($code);
+				$errors->add('generic_reset', 'Если аккаунт существует, письмо восстановления отправлено.');
+			}
+		}
+		return $errors;
+	}, 100);
+
+	// 1. Почта: полностью запретить.
 		add_filter( 'pre_wp_mail', function( $null, $atts ) {
 			self::log( 'BLOCKED email to=' . ( $atts['to'] ?? '?' ) . ' subject=' . ( $atts['subject'] ?? '?' ) );
 			return true; // не отдаём письмо, пропускаем как выполнено

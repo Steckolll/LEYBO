@@ -5,17 +5,13 @@ if (class_exists('Timber')) {
 //Скрытие версии wp
 add_filter('the_generator', '__return_empty_string');
 
-//TODO: Отключение авторизации rest. Удалить на production
-function wc_authenticate_alter()
-{
-	return new WP_User(1);
-}
-add_filter('woocommerce_api_check_authentication', 'wc_authenticate_alter', 1);
-add_filter('woocommerce_rest_check_permissions', 'my_woocommerce_rest_check_permissions', 90, 4);
-function my_woocommerce_rest_check_permissions($permission, $context, $object_id, $post_type)
-{
-	return true;
-}
+// ВНИМАНИЕ (Баг D, этап 6, критическая утечка закрыта 2026-09-09): здесь ранее
+// стояли легаси-хуки `wc_authenticate_alter` (REST-аутентификация -> WP_User(1))
+// и `my_woocommerce_rest_check_permissions` (rest_check_permissions -> true) —
+// они открывали ВСЕМ (включая гостей) полный REST-API WooCommerce: заказы,
+// клиенты с ПДн. IDOR-тест этапа 6 подтвердил утечку (REST /wc/v3/orders и
+// /customers гостем — 200 с данными). Хуки УДАЛЕНЫ. Перед продом проверить с
+// Кириллом, что ни одна внешняя интеграция не завязана на открытый REST.
 
 include_once(get_template_directory() . '/include/Timber/Integrations/WooCommerce/WooCommerce.php');
 include_once(get_template_directory() . '/include/Timber/Integrations/WooCommerce/ProductsIterator.php');
@@ -587,6 +583,63 @@ add_action('wc_ajax_add_to_cart', function () {
 	);
 	WC_Ajax::get_refreshed_fragments(); // JSON-фрагменты + exit
 }, 1);
+
+// Баг C (этап 5): woo-add-to-cart-variation JS не инициализирует вариационную
+// форму, а карточка товара ПЕРЕРИСОВЫВАЕТСЯ после загрузки (галерея/тема) —
+// свежая форма остаётся без обработчиков: свотчи кликабельны, но variation_id
+// не выставляется, цена вариации не появляется, клик по кнопке даёт alert
+// «Выберите опции товара». Фикс: самовосстанавливающаяся инициализация —
+// MutationObserver следит за DOM и инициализирует любую форму без метки
+// data-leybo_reinit (метка защищает от повторной инициализации живой формы).
+// Вывод через wp_footer: wc_enqueue_js на этой теме строки в HTML не печатал.
+add_action('wp_footer', function () {
+	if (!is_product()) { return; }
+	?>
+	<script>
+	jQuery(function($){
+		window.__leyboDiag = window.__leyboDiag || { runs: 0, forms: 0, fn: "?" };
+		var leyboReinit = function(){
+			window.__leyboDiag.runs++;
+			$('.variations_form').each(function(){
+				window.__leyboDiag.forms++;
+				if (!$(this).data('leybo_reinit')) {
+					$(this).data('leybo_reinit', 1);
+					if (typeof $.fn.wc_variation_form === 'function') { $(this).wc_variation_form(); }
+				}
+			});
+		};
+		window.__leyboDiag.fn = typeof $.fn.wc_variation_form;
+		leyboReinit();
+		$(window).on('load', leyboReinit);
+		setTimeout(leyboReinit, 600);
+		setTimeout(leyboReinit, 1500);
+		if (window.MutationObserver) {
+			var t = null;
+			new MutationObserver(function(){
+				clearTimeout(t);
+				t = setTimeout(leyboReinit, 200);
+			}).observe(document.body, { childList: true, subtree: true });
+		}
+	});
+	</script>
+	<?php
+}, 99);
+
+// Баг C, часть 2 (этап 6): кнопка «Заказать повторно» в Woo 10.7 рендерится
+// только для completed-заказов. Тестовые/оплаченные заказы в processing —
+// разрешаем повтор и для них (решение бизнеса: заказ оплачен, повтор уместен).
+add_filter('woocommerce_valid_order_statuses_for_order_again', function ($statuses) {
+	return array_unique(array_merge((array) $statuses, array('processing')));
+});
+
+// Баг C, часть 2 (этап 6): на карточке товара отсутствовала кнопка «В избранное»
+// (YITH шорткод вызывался только в loop-карточках каталога). Добавляю на
+// woocommerce_single_product_summary после кнопки корзины (приоритет 35).
+add_action('woocommerce_single_product_summary', function () {
+	if (shortcode_exists('yith_wcwl_add_to_wishlist')) {
+		echo do_shortcode('[yith_wcwl_add_to_wishlist]');
+	}
+}, 35);
 
 // Staging-safe mail defaults. Production delivery belongs in deployment config.
 add_action('phpmailer_init', function($pm){
