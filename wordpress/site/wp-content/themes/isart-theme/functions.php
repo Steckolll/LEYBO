@@ -244,72 +244,111 @@ class StarterSite extends TimberSite
 
 		$context['childs'] = Timber::get_terms($terms);
 
-		// C-direction home data (этап 3): hero-оффер, счётчики категорий, хиты.
-		// Hero и «Свежие модели» берём только из товаров с локально существующим
-		// фото: uploads 2026/06+ не переносились, свежие картинки дают 404.
+		// C-direction home data (этап 3; perf fix этапа 4): hero-оффер, счётчики
+		// категорий, хиты. Данные главной нужны только на фронт-странице — считаем
+		// их только там и кэшируем в transient (12 ч): meta_query по кириллическим
+		// ключам «хит»/«новинка» сканировал ~700k postmeta (~3.3 с) на каждой странице,
+		// при том что эти поля не заполнены ни у одного publish-товара.
 		$context['home_hero'] = null;
-		$hero_fallback = null;
-		$hero_candidates = get_posts(array(
-			'post_type' => 'product', 'post_status' => 'publish',
-			'orderby' => 'date', 'order' => 'DESC', 'posts_per_page' => 10,
-			'meta_query' => array(array('key' => '_thumbnail_id', 'compare' => 'EXISTS')),
-		));
-		foreach ($hero_candidates as $candidate) {
-			$hp = wc_get_product($candidate->ID);
-			if (!$hp || !$hp->get_image_id()) { continue; }
-			$file = get_attached_file($hp->get_image_id());
-			if (!$file || !file_exists($file)) { continue; }
-			$hero_price = $hp->is_type('variable') ? $hp->get_variation_price('min', true) : $hp->get_price();
-			$hero_regular = null; $hero_benefit = 0;
-			if ($hp->is_on_sale()) {
-				$reg = $hp->is_type('variable') ? (float) $hp->get_variation_regular_price('min', true) : (float) $hp->get_regular_price();
-				if ($reg > 0 && $hero_price > 0 && $hero_price < $reg) {
-					$hero_regular = $reg;
-					$hero_benefit = (int) round($reg - $hero_price);
-				}
+		$context['tile_women'] = null;
+		$context['tile_men'] = null;
+		$context['c_hits'] = array();
+		if (is_front_page()) {
+			$home = get_transient('leybo_home_bundle');
+			if (!is_array($home)) {
+				$home = leybo_build_home_data();
+				set_transient('leybo_home_bundle', $home, 12 * HOUR_IN_SECONDS);
 			}
-			$is_new = (bool) get_field('новинка', $hp->get_id());
-			$entry = array(
-				'link' => $hp->get_permalink(),
-				'img' => wp_get_attachment_image_url($hp->get_image_id(), 'full'),
-				'title' => $hp->get_title(),
-				'is_variable' => ($hp->get_type() === 'variable'),
-				'price' => $hero_price,
-				'price_regular' => $hero_regular,
-				'benefit' => $hero_benefit,
-				'is_new' => $is_new,
-			);
-			// Приоритет: товар с меткой «новинка» или реальной скидкой —
-			// тогда hero выглядит как в утверждённом макете (флаг + выгода).
-			if ($is_new || $hero_benefit > 0) { $context['home_hero'] = $entry; break; }
-			if ($hero_fallback === null) { $hero_fallback = $entry; }
-		}
-		if ($context['home_hero'] === null && $hero_fallback !== null) { $context['home_hero'] = $hero_fallback; }
-		foreach (array('women' => 'katalog-women', 'men' => 'katalog-men') as $key => $slug) {
-			$term = get_term_by('slug', $slug, 'product_cat');
-			$context['tile_' . $key] = ($term && !is_wp_error($term)) ? array(
-				'link' => get_term_link($term),
-				'count' => (int) $term->count,
-			) : null;
-		}
-		$context['c_hits'] = get_posts(array(
-			'post_type' => 'product', 'post_status' => 'publish',
-			'posts_per_page' => 4, 'orderby' => 'date', 'order' => 'DESC',
-			'meta_query' => array('relation' => 'OR',
-				array('key' => 'хит', 'compare' => 'EXISTS'),
-				array('key' => 'новинка', 'compare' => 'EXISTS'),
-			),
-		));
-		if (count($context['c_hits']) < 4) {
-			$context['c_hits'] = get_posts(array(
-				'post_type' => 'product', 'post_status' => 'publish',
-				'posts_per_page' => 4, 'orderby' => 'date', 'order' => 'DESC',
+			$context['home_hero'] = $home['hero'];
+			$context['tile_women'] = $home['tile_women'];
+			$context['tile_men'] = $home['tile_men'];
+			if (!empty($home['c_hit_ids'])) {
+				$context['c_hits'] = get_posts(array(
+					'post_type' => 'product', 'post_status' => 'publish',
+					'posts_per_page' => 4, 'post__in' => $home['c_hit_ids'],
+					'orderby' => 'post__in',
 				));
+			}
 		}
 
 		return $context;
 	}
 }
+
+// Сборка данных главной (hero с проверкой локального файла фото, тайлы, хиты).
+// Hero и «Свежие модели» берём только из товаров с локально существующим
+// фото: uploads 2026/06+ не переносились, свежие картинки дают 404.
+function leybo_build_home_data()
+{
+	$data = array('hero' => null, 'tile_women' => null, 'tile_men' => null, 'c_hit_ids' => array());
+	$hero_fallback = null;
+	$hero_candidates = get_posts(array(
+		'post_type' => 'product', 'post_status' => 'publish',
+		'orderby' => 'date', 'order' => 'DESC', 'posts_per_page' => 10,
+		'meta_query' => array(array('key' => '_thumbnail_id', 'compare' => 'EXISTS')),
+	));
+	foreach ($hero_candidates as $candidate) {
+		$hp = wc_get_product($candidate->ID);
+		if (!$hp || !$hp->get_image_id()) { continue; }
+		$file = get_attached_file($hp->get_image_id());
+		if (!$file || !file_exists($file)) { continue; }
+		$hero_price = $hp->is_type('variable') ? $hp->get_variation_price('min', true) : $hp->get_price();
+		$hero_regular = null; $hero_benefit = 0;
+		if ($hp->is_on_sale()) {
+			$reg = $hp->is_type('variable') ? (float) $hp->get_variation_regular_price('min', true) : (float) $hp->get_regular_price();
+			if ($reg > 0 && $hero_price > 0 && $hero_price < $reg) {
+				$hero_regular = $reg;
+				$hero_benefit = (int) round($reg - $hero_price);
+			}
+		}
+		$is_new = (bool) get_field('новинка', $hp->get_id());
+		$entry = array(
+			'link' => $hp->get_permalink(),
+			'img' => wp_get_attachment_image_url($hp->get_image_id(), 'full'),
+			'title' => $hp->get_title(),
+			'is_variable' => ($hp->get_type() === 'variable'),
+			'price' => $hero_price,
+			'price_regular' => $hero_regular,
+			'benefit' => $hero_benefit,
+			'is_new' => $is_new,
+		);
+		// Приоритет: товар с меткой «новинка» или реальной скидкой —
+		// тогда hero выглядит как в утверждённом макете (флаг + выгода).
+		if ($is_new || $hero_benefit > 0) { $data['hero'] = $entry; break; }
+		if ($hero_fallback === null) { $hero_fallback = $entry; }
+	}
+	if ($data['hero'] === null && $hero_fallback !== null) { $data['hero'] = $hero_fallback; }
+	foreach (array('women' => 'katalog-women', 'men' => 'katalog-men') as $key => $slug) {
+		$term = get_term_by('slug', $slug, 'product_cat');
+		$data['tile_' . $key] = ($term && !is_wp_error($term)) ? array(
+			'link' => get_term_link($term),
+			'count' => (int) $term->count,
+		) : null;
+	}
+	$hits = get_posts(array(
+		'post_type' => 'product', 'post_status' => 'publish',
+		'posts_per_page' => 4, 'orderby' => 'date', 'order' => 'DESC',
+		'meta_query' => array('relation' => 'OR',
+			array('key' => 'хит', 'compare' => 'EXISTS'),
+			array('key' => 'новинка', 'compare' => 'EXISTS'),
+		),
+	));
+	if (count($hits) < 4) {
+		$hits = get_posts(array(
+			'post_type' => 'product', 'post_status' => 'publish',
+			'posts_per_page' => 4, 'orderby' => 'date', 'order' => 'DESC',
+			));
+	}
+	$data['c_hit_ids'] = wp_list_pluck($hits, 'ID');
+	return $data;
+}
+
+// Инвалидация кэша главной: правки товаров, удаление, изменение цен (включая вариации).
+add_action('save_post_product', function () { delete_transient('leybo_home_bundle'); });
+add_action('delete_post', function ($post_id) { if (get_post_type($post_id) === 'product') { delete_transient('leybo_home_bundle'); } });
+add_action('woocommerce_product_set_price', function () { delete_transient('leybo_home_bundle'); });
+add_action('woocommerce_variation_set_price', function () { delete_transient('leybo_home_bundle'); });
+
 new StarterSite();
 
 function timber_set_product($post)
