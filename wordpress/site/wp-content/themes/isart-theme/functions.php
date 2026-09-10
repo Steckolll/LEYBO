@@ -349,6 +349,25 @@ add_action('delete_post', function ($post_id) { if (get_post_type($post_id) === 
 add_action('woocommerce_product_set_price', function () { delete_transient('leybo_home_bundle'); });
 add_action('woocommerce_variation_set_price', function () { delete_transient('leybo_home_bundle'); });
 
+// Инвалидация страничного кэша WPFC при правках вариаций: WP Fastest Cache слушает
+// только transition_post_status/woocommerce_update_product, но синк обновляет именно
+// вариации (woocommerce_update_product_variation), а singleDeleteCache(вариация) не
+// матчит кэш-путь из-за query-string в permalink вариации. Чистим кэш родителя + главной.
+add_action('woocommerce_update_product_variation', function ($variation_id) {
+	if (!class_exists('WpFastestCache')) { return; }
+	if (!get_option('WpFastestCache')) { return; }
+	$variation = wc_get_product($variation_id);
+	if (!$variation || !method_exists($variation, 'get_parent_id')) { return; }
+	$parent_id = (int) $variation->get_parent_id();
+	if (!$parent_id) { return; }
+	try {
+		$wfc = new WpFastestCache();
+		$wfc->singleDeleteCache(false, $parent_id);
+	} catch (Throwable $e) {
+		error_log('[leybo-wpfc] variation cache clear failed: ' . $e->getMessage());
+	}
+}, 20, 1);
+
 new StarterSite();
 
 function timber_set_product($post)

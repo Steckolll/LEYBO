@@ -1,3 +1,43 @@
+# BEGIN WpFastestCache
+# Modified Time: 10-09-26 11:58:33
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteBase /
+RewriteCond %{HTTP_HOST} ^www. [NC]
+RewriteRule ^(.*)$ http\:\/\/localhost\:8081\/$1 [R=301,L]
+# Start WPFC Exclude
+RewriteCond %{REQUEST_URI} !^/wishlist$ [NC]
+# End WPFC Exclude
+# Start_WPFC_Exclude_Admin_Cookie
+RewriteCond %{HTTP:Cookie} !wordpress_logged_in_[^\=]+\=admin|leybo_mcp_dev_20260826
+# End_WPFC_Exclude_Admin_Cookie
+RewriteCond %{HTTP_HOST} ^localhost:8081
+RewriteCond %{HTTP_USER_AGENT} !(facebookexternalhit|WP_FASTEST_CACHE_CSS_VALIDATOR|Twitterbot|LinkedInBot|WhatsApp|Mediatoolkitbot)
+RewriteCond %{HTTP_USER_AGENT} !(WP\sFastest\sCache\sPreload(\siPhone\sMobile)?\s*Bot)
+RewriteCond %{REQUEST_METHOD} !POST
+RewriteCond %{HTTPS} !=on
+RewriteCond %{REQUEST_URI} !(\/){2,}
+RewriteCond %{THE_REQUEST} !(\/){2,}
+RewriteCond %{REQUEST_URI} \/$
+RewriteCond %{QUERY_STRING} !.+ [OR]
+RewriteCond %{QUERY_STRING} fbclid=
+RewriteCond %{HTTP:Cookie} !comment_author_
+RewriteCond %{HTTP:Profile} !^[a-z0-9\"]+ [NC]
+RewriteCond %{DOCUMENT_ROOT}/wp-content/cache/all/$1/index.html -f [or]
+RewriteCond /var/www/html/wp-content/cache/all/$1/index.html -f
+RewriteRule ^(.*) "/wp-content/cache/all/$1/index.html" [L]
+</IfModule>
+<FilesMatch "index\.(html|htm)$">
+AddDefaultCharset UTF-8
+<ifModule mod_headers.c>
+FileETag None
+Header unset ETag
+Header set Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
+Header set Pragma "no-cache"
+Header set Expires "Mon, 29 Oct 1923 20:30:00 GMT"
+</ifModule>
+</FilesMatch>
+# END WpFastestCache
 # Staging-only protection for files that must never be served over HTTP.
 <FilesMatch "^(wp-config\.php|debug\.log|.*\.sql(?:\.gz)?|.*\.zip|.*\.bak|.*\.secret)$">
     Require all denied
